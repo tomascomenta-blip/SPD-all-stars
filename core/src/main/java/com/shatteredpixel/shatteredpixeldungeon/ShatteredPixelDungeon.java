@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.TitleScene;
@@ -137,6 +138,19 @@ public class ShatteredPixelDungeon extends Game {
 	
 	public void updateDisplaySize(){
 		platform.updateDisplaySize();
+	}
+
+	@Override
+	public void pause() {
+		super.pause();
+		//cooperative runs: the host plays our hero while the game is in the background
+		CoopSession.appPaused(true);
+	}
+
+	@Override
+	public void resume() {
+		super.resume();
+		CoopSession.appPaused(false);
 	}
 
 	public static void updateSystemUI() {

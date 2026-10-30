@@ -21,11 +21,19 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.WndCoopScore;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopScene;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopHud;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopAuto;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopOrders;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopPings;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.Rankings;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
@@ -77,6 +85,22 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.big.Colossus;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.big.ColossusPresence;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.big.ColossusSprite;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forgotten.ForgottenBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forgotten.TharogHud;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.ash.boss.AshBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.ash.boss.PyreHud;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.kingdom.KingdomBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.kingdom.KnightHud;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.Continent;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.ContinentHud;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.awake.AwakeSky;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.RiftLevel;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.ThalHud;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.kraken.KrakenHud;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.kraken.KrakenLevel;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.DiscardedItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
@@ -126,6 +150,14 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndUpgrade;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.ForestBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.PriestHud;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.LabQuest;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.MiniBossHud;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.SealsQuest;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.RitualHud;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.starship.StarshipBossLevel;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.starship.VarkolynHud;
 import com.watabou.gltextures.TextureCache;
 import com.watabou.glwrap.Blending;
 import com.watabou.input.ControllerHandler;
@@ -224,14 +256,14 @@ public class GameScene extends PixelScene {
 	@Override
 	public void create() {
 		
-		if (Dungeon.hero == null || Dungeon.level == null){
+		if (Dungeon.local() == null || Dungeon.level == null){
 			ShatteredPixelDungeon.switchNoFade(TitleScene.class);
 			return;
 		}
 
 		Dungeon.level.playLevelMusic();
 
-		SPDSettings.lastClass(Dungeon.hero.heroClass.ordinal());
+		SPDSettings.lastClass(Dungeon.local().heroClass.ordinal());
 		
 		super.create();
 		Camera.main.zoom( GameMath.gate(minZoom, defaultZoom + SPDSettings.zoom(), maxZoom));
@@ -319,10 +351,19 @@ public class GameScene extends PixelScene {
 		mobs = new Group();
 		add( mobs );
 
-		hero = new HeroSprite();
-		hero.place( Dungeon.hero.pos );
+		hero = new HeroSprite( Dungeon.local() );
+		hero.place( Dungeon.local().pos );
 		hero.updateArmor();
 		mobs.add( hero );
+
+		//the other heroes of a cooperative run
+		if (Party.active()){
+			for (Hero h : Party.heroes()){
+				if (h != Dungeon.local() && h.isAlive() && !h.coopDown){
+					addPartnerSprite( h );
+				}
+			}
+		}
 		
 		for (Mob mob : Dungeon.level.mobs) {
 			addMobSprite( mob );
@@ -397,6 +438,25 @@ public class GameScene extends PixelScene {
 		
 		add( cellSelector = new CellSelector( tiles ) );
 
+		//the storm of the Kraken, over the map and under the interface
+		if (Dungeon.level instanceof KrakenLevel){
+			Group storm = KrakenHud.storm();
+			storm.camera = uiCamera;
+			add(storm);
+		}
+		//and the ash storm of the walking pyre
+		if (Dungeon.level instanceof AshBossLevel){
+			Group storm = PyreHud.storm();
+			storm.camera = uiCamera;
+			add(storm);
+		}
+		//and the red sky of the dark continent once it wakes up
+		if (Continent.in()){
+			AwakeSky sky = new AwakeSky();
+			sky.camera = uiCamera;
+			add(sky);
+		}
+
 		int uiSize = SPDSettings.interfaceSize();
 
 		//display cutouts can obstruct various UI elements, so we need to adjust for that sometimes
@@ -462,6 +522,13 @@ public class GameScene extends PixelScene {
 			screentop--; //on mobile UI, if we render in fullscreen, clip the top 1px;
 		}
 
+		if (Party.active()){
+			CoopHud coopHud = new CoopHud();
+			coopHud.camera = uiCamera;
+			coopHud.setPos(uiCamera.width - 60, screentop + (landscape() ? 34 : 44));
+			add(coopHud);
+		}
+
 		menu = new MenuPane();
 		menu.camera = uiCamera;
 		menu.setPos( menuBarMaxLeft, screentop);
@@ -509,6 +576,71 @@ public class GameScene extends PixelScene {
 			boss.setPos(boss.left(), boss.top() + buffBarRowAdjusts[2]);
 		}
 		add(boss);
+		if (Dungeon.level instanceof ForgottenBossLevel){
+			TharogHud tharogHud =
+					new TharogHud(boss.top() - 4);
+			tharogHud.camera = uiCamera;
+			add(tharogHud);
+		}
+		if (Dungeon.level instanceof AshBossLevel){
+			PyreHud pyreHud = new PyreHud(boss.top() - 4);
+			pyreHud.camera = uiCamera;
+			add(pyreHud);
+		}
+		if (Dungeon.level instanceof KingdomBossLevel
+				&& ((KingdomBossLevel) Dungeon.level).throne != -1){
+			KnightHud knightHud =
+					new KnightHud(boss.top() - 4);
+			knightHud.camera = uiCamera;
+			add(knightHud);
+		}
+		if (Dungeon.level instanceof ForestBossLevel && ((ForestBossLevel) Dungeon.level).bonfire != -1){
+			PriestHud priestHud = new PriestHud(boss.top() - 4);
+			priestHud.camera = uiCamera;
+			add(priestHud);
+		}
+		if (Dungeon.level instanceof StarshipBossLevel && ((StarshipBossLevel) Dungeon.level).cocoon != -1){
+			VarkolynHud varkolynHud = new VarkolynHud(boss.top() - 4);
+			varkolynHud.camera = uiCamera;
+			add(varkolynHud);
+		}
+		if (LabQuest.LabHud.wanted()){
+			LabQuest.LabHud labHud = new LabQuest.LabHud(boss.top() + 48);
+			labHud.camera = uiCamera;
+			add(labHud);
+		}
+		if (SealsQuest.SealsHud.wanted()){
+			SealsQuest.SealsHud sealsHud = new SealsQuest.SealsHud(boss.top() + 48);
+			sealsHud.camera = uiCamera;
+			add(sealsHud);
+		}
+		MiniBossHud miniBossHud = new MiniBossHud(boss.top() - 4);
+		miniBossHud.camera = uiCamera;
+		add(miniBossHud);
+		if (RitualHud.wanted()){
+			RitualHud ritualHud = new RitualHud(boss.top());
+			ritualHud.camera = uiCamera;
+			add(ritualHud);
+		}
+		if (Continent.in() || Colossus.any()){
+			ContinentHud continentHud = new ContinentHud();
+			continentHud.camera = uiCamera;
+			add(continentHud);
+			ColossusPresence presence = new ColossusPresence();
+			presence.camera = uiCamera;
+			add(presence);
+		}
+		if (Dungeon.level instanceof RiftLevel){
+			ThalHud thalHud = new ThalHud(boss.top() - 4);
+			thalHud.camera = uiCamera;
+			add(thalHud);
+		}
+		if (Dungeon.level instanceof KrakenLevel){
+			KrakenHud krakenHud =
+					new KrakenHud(boss.top() - 4);
+			krakenHud.camera = uiCamera;
+			add(krakenHud);
+		}
 
 		resume = new ResumeIndicator();
 		resume.camera = uiCamera;
@@ -566,31 +698,34 @@ public class GameScene extends PixelScene {
 		switch (InterlevelScene.mode) {
 			case RESURRECT:
 				Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
-				ScrollOfTeleportation.appearVFX( Dungeon.hero );
-				SpellSprite.show(Dungeon.hero, SpellSprite.ANKH);
+				ScrollOfTeleportation.appearVFX( Dungeon.local() );
+				SpellSprite.show(Dungeon.local(), SpellSprite.ANKH);
 				new Flare( 5, 16 ).color( 0xFFFF00, true ).show( hero, 4f ) ;
 				break;
 			case RETURN:
-				if (Dungeon.level.pit[Dungeon.hero.pos] && !Dungeon.hero.flying){
+				if (Dungeon.level.pit[Dungeon.local().pos] && !Dungeon.local().flying){
 					//delay this so falling into the chasm processes properly
 					ShatteredPixelDungeon.runOnRenderThread(new Callback() {
 						@Override
 						public void call() {
-							ScrollOfTeleportation.appearVFX(Dungeon.hero);
+							ScrollOfTeleportation.appearVFX(Dungeon.local());
 						}
 					});
 				} else {
-					ScrollOfTeleportation.appearVFX(Dungeon.hero);
+					ScrollOfTeleportation.appearVFX(Dungeon.local());
 				}
 				break;
 			case DESCEND:
 			case FALL:
-				if (Dungeon.hero.isAlive()) {
+				if (Dungeon.local().isAlive()) {
 					Badges.validateNoKilling();
 				}
 				break;
 		}
 
+		//this part changes the game state, so it must use the shared random sequence in cooperative runs
+		Random.beginGameplay();
+		try {
 		ArrayList<Item> dropped = Dungeon.droppedItems.get( Dungeon.depth );
 		if (dropped != null) {
 			for (Item item : dropped) {
@@ -609,7 +744,10 @@ public class GameScene extends PixelScene {
 			Dungeon.droppedItems.remove( Dungeon.depth );
 		}
 
-		Dungeon.hero.next();
+		Dungeon.local().next();
+		} finally {
+			Random.endGameplay();
+		}
 
 		switch (InterlevelScene.mode){
 			case FALL: case DESCEND: case CONTINUE:
@@ -626,7 +764,8 @@ public class GameScene extends PixelScene {
 		if (InterlevelScene.mode != InterlevelScene.Mode.NONE) {
 			if (Dungeon.depth == Statistics.deepestFloor
 					&& (InterlevelScene.mode == InterlevelScene.Mode.DESCEND || InterlevelScene.mode == InterlevelScene.Mode.FALL)) {
-				GLog.h(Messages.get(this, "descend"), Dungeon.depth);
+				if (Continent.arrival() != null) GLog.h(Continent.arrival());
+				else GLog.h(Messages.get(this, "descend"), Continent.displayDepth());
 				Sample.INSTANCE.play(Assets.Sounds.DESCEND);
 				
 				for (Char ch : Actor.chars()){
@@ -656,12 +795,16 @@ public class GameScene extends PixelScene {
 			} else if (InterlevelScene.mode == InterlevelScene.Mode.RESET) {
 				GLog.h(Messages.get(this, "warp"));
 			} else if (InterlevelScene.mode == InterlevelScene.Mode.RESURRECT) {
-				GLog.h(Messages.get(this, "resurrect"), Dungeon.depth);
+				if (Continent.arrival() != null) GLog.h(Continent.arrival());
+				else GLog.h(Messages.get(this, "resurrect"), Continent.displayDepth());
+			} else if (InterlevelScene.mode == InterlevelScene.Mode.COOP_SYNC) {
+				//cooperative resync: same floor, nothing to announce
 			} else {
-				GLog.h(Messages.get(this, "return"), Dungeon.depth);
+				if (Continent.arrival() != null) GLog.h(Continent.arrival());
+				else GLog.h(Messages.get(this, "return"), Continent.displayDepth());
 			}
 
-			if (Dungeon.hero.hasTalent(Talent.ROGUES_FORESIGHT)
+			if (Dungeon.local().hasTalent(Talent.ROGUES_FORESIGHT)
 					&& Dungeon.level instanceof RegularLevel && Dungeon.branch == 0){
 				int reqSecrets = Dungeon.level.feeling == Level.Feeling.SECRETS ? 2 : 1;
 				for (Room r : ((RegularLevel) Dungeon.level).rooms()){
@@ -670,23 +813,25 @@ public class GameScene extends PixelScene {
 
 				//75%/100% chance, use level's seed so that we get the same result for the same level
 				//offset seed slightly to avoid output patterns
+				Random.beginGameplay();
 				Random.pushGenerator(Dungeon.seedCurDepth()+1);
-					if (reqSecrets <= 0 && Random.Int(4) < 2+Dungeon.hero.pointsInTalent(Talent.ROGUES_FORESIGHT)){
+					if (reqSecrets <= 0 && Random.Int(4) < 2+Dungeon.local().pointsInTalent(Talent.ROGUES_FORESIGHT)){
 						GLog.p(Messages.get(this, "secret_hint"));
 					}
 				Random.popGenerator();
+				Random.endGameplay();
 			}
 
 			boolean unspentTalents = false;
-			for (int i = 1; i <= Dungeon.hero.talents.size(); i++){
-				if (Dungeon.hero.talentPointsAvailable(i) > 0){
+			for (int i = 1; i <= Dungeon.local().talents.size(); i++){
+				if (Dungeon.local().talentPointsAvailable(i) > 0){
 					unspentTalents = true;
 					break;
 				}
 			}
 			if (unspentTalents){
 				GLog.newLine();
-				GLog.w( Messages.get(Dungeon.hero, "unspent") );
+				GLog.w( Messages.get(Dungeon.local(), "unspent") );
 				StatusPane.talentBlink = 10f;
 				WndHero.lastIdx = 1;
 			}
@@ -728,8 +873,8 @@ public class GameScene extends PixelScene {
 				}
 			}
 
-			if (Dungeon.hero.buff(AscensionChallenge.class) != null){
-				Dungeon.hero.buff(AscensionChallenge.class).saySwitch();
+			if (Dungeon.local().buff(AscensionChallenge.class) != null){
+				Dungeon.local().buff(AscensionChallenge.class).saySwitch();
 			}
 
 			DimensionalSundial.sundialWarned = true;
@@ -770,19 +915,20 @@ public class GameScene extends PixelScene {
 			GameScene.flashForDocument(Document.ADVENTURERS_GUIDE, Document.GUIDE_DIEING);
 		}
 
-		TrinketCatalyst cata = Dungeon.hero.belongings.getItem(TrinketCatalyst.class);
-		if (cata != null && cata.hasRolledTrinkets()){
+		TrinketCatalyst cata = Dungeon.local().belongings.getItem(TrinketCatalyst.class);
+		//cooperative runs: this choice could not be shared, the catalyst is used again in the pot instead
+		if (cata != null && cata.hasRolledTrinkets() && !Party.active()){
 			addToFront(new TrinketCatalyst.WndTrinket(cata));
 		}
 
 		if (!invVisible) toggleInvPane();
 		fadeIn();
 
-		//re-show WndResurrect if needed
-		if (!Dungeon.hero.isAlive()){
+		//re-show WndResurrect if needed (in cooperative runs only when the whole party is down)
+		if (!Party.anyAlive()){
 			//check if hero has an unblessed ankh
 			Ankh ankh = null;
-			for (Ankh i : Dungeon.hero.belongings.getAllItems(Ankh.class)){
+			for (Ankh i : Dungeon.local().belongings.getAllItems(Ankh.class)){
 				if (!i.isBlessed()){
 					ankh = i;
 				}
@@ -839,7 +985,7 @@ public class GameScene extends PixelScene {
 	@Override
 	public synchronized void onPause() {
 		try {
-			if (!Dungeon.hero.ready) waitForActorThread(500, false);
+			if (!Dungeon.local().ready) waitForActorThread(500, false);
 			Dungeon.saveAll();
 			Badges.saveGlobal();
 			Journal.saveGlobal();
@@ -879,7 +1025,7 @@ public class GameScene extends PixelScene {
 			}
 		}
 
-		if (Dungeon.hero == null || scene == null) {
+		if (Dungeon.local() == null || scene == null) {
 			return;
 		}
 
@@ -888,12 +1034,15 @@ public class GameScene extends PixelScene {
 		if (notifyDelay > 0) notifyDelay -= Game.elapsed;
 
 		if (!Emitter.freezeEmitters) {
-			waterOfs -= 5 * Game.elapsed;
+			waterOfs -= Dungeon.level.waterSpeed() * Game.elapsed;
 			water.offsetTo( 0, waterOfs );
 			waterOfs = water.offsetY(); //re-assign to account for auto adjust
 		}
 
-		if (!Actor.processing() && Dungeon.hero.isAlive()) {
+		CoopSession.update();
+		CoopAuto.botTick();
+
+		if (!Actor.processing() && Party.anyAlive()) {
 			if (actorThread == null || !actorThread.isAlive()) {
 				
 				actorThread = new Thread() {
@@ -919,7 +1068,7 @@ public class GameScene extends PixelScene {
 			}
 		}
 
-		if (Dungeon.hero.ready && Dungeon.hero.paralysed == 0) {
+		if (Dungeon.local().ready && Dungeon.local().paralysed == 0) {
 			log.newLine();
 		}
 
@@ -953,7 +1102,7 @@ public class GameScene extends PixelScene {
 
 		}
 
-		cellSelector.enable(Dungeon.hero.ready);
+		cellSelector.enable(Dungeon.local().ready && CoopSession.localInputAllowed());
 
 		if (!toDestroy.isEmpty()) {
 			for (Gizmo g : toDestroy) {
@@ -992,7 +1141,7 @@ public class GameScene extends PixelScene {
 		} else {
 			Camera.main.setCenterOffset(0, 0);
 		}
-		//Camera.main.panTo(Dungeon.hero.sprite.center(), 5f);
+		//Camera.main.panTo(Dungeon.local().sprite.center(), 5f);
 
 		//adjust spacing for elements based on display cutouts
 		// We use ALL here as some elements can be a fair but up the side of the screen
@@ -1094,13 +1243,19 @@ public class GameScene extends PixelScene {
 	
 	private synchronized void addMobSprite( Mob mob ) {
 		CharSprite sprite = mob.sprite();
-		sprite.visible = sprite.visibleOutOfFFOV || Dungeon.level.heroFOV[mob.pos];
+		sprite.visible = sprite.visibleOutOfFFOV || Dungeon.level.heroFOV[mob.pos]
+				|| (mob instanceof Colossus && ((Colossus) mob).seen()) || ColossusPresence.lifted(mob.pos);
 		mobs.add( sprite );
 		sprite.link( mob );
 		sortMobSprites();
 	}
 
 	//ensures that mob sprites are drawn from top to bottom, in case of overlap
+	//bottom edge, except for the big ones (see ColossusSprite.sortY)
+	private static float sortY( Visual v ){
+		return v instanceof ColossusSprite ? ((ColossusSprite) v).sortY() : v.y + v.height();
+	}
+
 	public static void sortMobSprites(){
 		if (scene != null){
 			synchronized (scene) {
@@ -1109,8 +1264,7 @@ public class GameScene extends PixelScene {
 					public int compare(Object a, Object b) {
 						//elements that aren't visual go to the end of the list
 						if (a instanceof Visual && b instanceof Visual) {
-							return (int) Math.signum((((Visual) a).y + ((Visual) a).height())
-									- (((Visual) b).y + ((Visual) b).height()));
+							return (int) Math.signum(sortY((Visual) a) - sortY((Visual) b));
 						} else if (a instanceof Visual){
 							return -1;
 						} else if (b instanceof Visual){
@@ -1315,7 +1469,7 @@ public class GameScene extends PixelScene {
 						GLog.p(Messages.get(Guidebook.class, "hint_desktop", KeyBindings.getKeyName(KeyBindings.getFirstKeyForAction(SPDAction.JOURNAL, ControllerHandler.isControllerConnected()))));
 					}
 				}
-				Dungeon.hero.sprite.showStatus(CharSprite.POSITIVE, Messages.get(Guidebook.class, "hint_status"));
+				Dungeon.local().sprite.showStatus(CharSprite.POSITIVE, Messages.get(Guidebook.class, "hint_status"));
 			}
 			scene.menu.flashForPage( doc, page );
 		}
@@ -1432,6 +1586,16 @@ public class GameScene extends PixelScene {
 	}
 	
 	public static void show( Window wnd ) {
+		//cooperative runs: windows of the other player's hero are kept aside, not shown
+		if (CoopSession.promptCreated(wnd)){
+			wnd.coopDetach();
+			return;
+		}
+		showUntracked( wnd );
+	}
+
+	//shows a window without registering it as a shared prompt
+	public static void showUntracked( Window wnd ) {
 		if (scene != null) {
 			cancel();
 
@@ -1453,6 +1617,21 @@ public class GameScene extends PixelScene {
 
 			scene.addToFront(wnd);
 		}
+	}
+
+	//true while the player is asked to pick a cell (aiming a throw, a wand...)
+	public static boolean isSelectingCell(){
+		return cellSelector != null && cellSelector.listener != null && cellSelector.listener != defaultCellListener;
+	}
+
+	//the window on top, null if none
+	public static Window topWindow(){
+		if (scene == null) return null;
+		Window top = null;
+		for (Gizmo g : scene.membersList()){
+			if (g instanceof Window) top = (Window) g;
+		}
+		return top;
 	}
 
 	public static boolean showingWindow(){
@@ -1533,7 +1712,8 @@ public class GameScene extends PixelScene {
 						//TODO can probably migrate this to Charsprite.visibleOutOfFFOV
 						mob.sprite.visible = true;
 					} else {
-						mob.sprite.visible = mob.sprite.visibleOutOfFFOV || Dungeon.level.heroFOV[mob.pos];
+						mob.sprite.visible = mob.sprite.visibleOutOfFFOV || Dungeon.level.heroFOV[mob.pos]
+								|| (mob instanceof Colossus && ((Colossus) mob).seen()) || ColossusPresence.lifted(mob.pos);
 					}
 				}
 				if (mob instanceof Ghoul){
@@ -1578,7 +1758,13 @@ public class GameScene extends PixelScene {
 		StyledButton restart = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(StartScene.class, "new"), 9){
 			@Override
 			protected void onClick() {
-				GamesInProgress.selectedClass = Dungeon.hero.heroClass;
+				//cooperative runs: back to the co-op room, keeping the connection with the partner
+				if (CoopSession.current != null && CoopSession.current.started){
+					CoopSession.current.backToLobby();
+					ShatteredPixelDungeon.switchScene(CoopScene.class);
+					return;
+				}
+				GamesInProgress.selectedClass = Dungeon.local().heroClass;
 				GamesInProgress.curSlot = GamesInProgress.firstEmpty();
 				ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
 			}
@@ -1621,10 +1807,36 @@ public class GameScene extends PixelScene {
 				restart.bottom() + 2
 		);
 		scene.add(menu);
+
+		//co-op: what each player did, right away and again from this button
+		if (Party.active()){
+			StyledButton score = new StyledButton(Chrome.Type.GREY_BUTTON_TR, Messages.get(WndCoopScore.class, "button"), 9){
+				@Override
+				protected void onClick() {
+					GameScene.showUntracked(new WndCoopScore());
+				}
+
+				@Override
+				public void update() {
+					alpha((float)Math.pow(gameOver.am, 2));
+					super.update();
+				}
+			};
+			score.icon(Icons.get(Icons.RANKINGS));
+			score.alpha(0);
+			score.camera = uiCamera;
+			score.setSize(Math.max(80, score.reqWidth()), 20);
+			score.setPos(
+					align(uiCamera, (score.camera.width - score.width()) / 2),
+					menu.bottom() + 2
+			);
+			scene.add(score);
+			showUntracked(new WndCoopScore());
+		}
 	}
 	
 	public static void bossSlain() {
-		if (Dungeon.hero.isAlive()) {
+		if (Dungeon.local().isAlive()) {
 			Banner bossSlain = new Banner( BannerSprites.get( BannerSprites.Type.BOSS_SLAIN ) );
 			bossSlain.show( 0xFFFFFF, 0.3f, 5f );
 			scene.showBanner( bossSlain );
@@ -1633,16 +1845,30 @@ public class GameScene extends PixelScene {
 		}
 	}
 	
+	//sprite for another hero of a cooperative run
+	public static void addPartnerSprite( Hero h ){
+		if (scene == null) return;
+		HeroSprite sprite = new HeroSprite( h );
+		sprite.place( h.pos );
+		sprite.updateArmor();
+		sprite.visible = true;
+		scene.mobs.add( sprite );
+	}
+
 	public static void handleCell( int cell ) {
 		cellSelector.select( cell, PointerEvent.LEFT );
 	}
 	
 	public static void selectCell( CellSelector.Listener listener ) {
+		//cooperative runs: a prompt for the other player's hero is kept aside, not shown
+		if (listener != defaultCellListener && CoopSession.promptCreated(listener)){
+			return;
+		}
 		if (cellSelector.listener != null && cellSelector.listener != defaultCellListener){
 			cellSelector.listener.onSelect(null);
 		}
 		cellSelector.listener = listener;
-		cellSelector.enabled = Dungeon.hero.ready;
+		cellSelector.enabled = Dungeon.local().ready;
 		if (scene != null) {
 			scene.prompt(listener.prompt());
 		}
@@ -1659,6 +1885,9 @@ public class GameScene extends PixelScene {
 	}
 	
 	public static WndBag selectItem( WndBag.ItemSelector listener ) {
+		if (CoopSession.promptCreated(listener)){
+			return null;
+		}
 		cancel();
 
 		if (scene != null) {
@@ -1668,7 +1897,7 @@ public class GameScene extends PixelScene {
 				return null;
 			} else {
 				WndBag wnd = WndBag.getBag( listener );
-				show(wnd);
+				showUntracked(wnd);
 				return wnd;
 			}
 		}
@@ -1707,7 +1936,7 @@ public class GameScene extends PixelScene {
 			if (scene != null && scene.inventory != null){
 				scene.inventory.setSelector(savedSelector);
 			} else {
-				addToFront(new WndBag(Dungeon.hero.belongings.backpack, savedSelector));
+				addToFront(new WndBag(Dungeon.local().belongings.backpack, savedSelector));
 			}
 			savedSelector = null;
 		}
@@ -1715,10 +1944,12 @@ public class GameScene extends PixelScene {
 
 	public static boolean cancel() {
 		cellSelector.resetKeyHold();
-		if (Dungeon.hero != null && (Dungeon.hero.curAction != null || Dungeon.hero.resting)) {
+		//cooperative runs: stopping the hero is applied at the start of its next turn
+		if (CoopSession.deferCancel()) return true;
+		if (Dungeon.local() != null && (Dungeon.local().curAction != null || Dungeon.local().resting)) {
 			
-			Dungeon.hero.curAction = null;
-			Dungeon.hero.resting = false;
+			Dungeon.local().curAction = null;
+			Dungeon.local().resting = false;
 			return true;
 			
 		} else {
@@ -1729,6 +1960,7 @@ public class GameScene extends PixelScene {
 	}
 	
 	public static void ready() {
+		if (CoopSession.remoteContext()) return;
 		selectCell( defaultCellListener );
 		QuickSlotButton.cancel();
 		InventoryPane.cancelTargeting();
@@ -1781,7 +2013,7 @@ public class GameScene extends PixelScene {
 		ArrayList<Object> objects = new ArrayList<>();
 
 		Char ch = Actor.findChar(cell);
-		if (ch != null && ch != Dungeon.hero){
+		if (ch != null && ch != Dungeon.local()){
 			if (Dungeon.level.heroFOV[cell] || Char.hasProp(ch, Char.Property.OBJECT)){
 				objects.add(ch);
 			}
@@ -1793,8 +2025,8 @@ public class GameScene extends PixelScene {
 		Plant plant = Dungeon.level.plants.get( cell );
 		if (plant != null) objects.add(plant);
 
-		if (cell == Dungeon.hero.pos) {
-			objects.add(Dungeon.hero);
+		if (cell == Dungeon.local().pos) {
+			objects.add(Dungeon.local());
 		}
 
 		Trap trap = Dungeon.level.traps.get( cell );
@@ -1816,7 +2048,7 @@ public class GameScene extends PixelScene {
 	}
 
 	public static void examineObject(Object o){
-		if (o == Dungeon.hero){
+		if (o == Dungeon.local()){
 			GameScene.show( new WndHero() );
 		} else if ( o instanceof Mob && ((Mob) o).isActive() ){
 			GameScene.show(new WndInfoMob((Mob) o));
@@ -1842,9 +2074,8 @@ public class GameScene extends PixelScene {
 	private static final CellSelector.Listener defaultCellListener = new CellSelector.Listener() {
 		@Override
 		public void onSelect( Integer cell ) {
-			if (Dungeon.hero.handle( cell )) {
-				Dungeon.hero.next();
-			}
+			if (cell == null) return;
+			CoopOrders.handleCell( cell );
 		}
 
 		@Override
@@ -1925,12 +2156,18 @@ public class GameScene extends PixelScene {
 				textLines.add(1, "_" + Messages.get(GameScene.class, "examine") + "_");
 			}
 
+			//co-op: mark the cell for the group (CoopPings)
+			final int markIndex = CoopSession.active() ? textLines.size() : -1;
+			if (markIndex >= 0) textLines.add("_" + Messages.get(CoopPings.class, "menu") + "_");
+
 			RightClickMenu menu = new RightClickMenu(image,
 					title,
 					textLines.toArray(new String[0])){
 				@Override
 				public void onSelect(int index) {
-					if (index == 0){
+					if (index == markIndex){
+						CoopPings.askKind(cell);
+					} else if (index == 0){
 						handleCell(cell);
 					} else {
 						if (objects.size() == 0){

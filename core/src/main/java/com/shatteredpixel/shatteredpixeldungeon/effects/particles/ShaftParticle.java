@@ -54,7 +54,7 @@ public class ShaftParticle extends PixelParticle {
 		this.x = x;
 		this.y = y;
 		
-		offs = -Random.Float( lifespan );
+		offs = -Random.Visual.Float( lifespan );
 		left = lifespan - offs;
 	}
 	

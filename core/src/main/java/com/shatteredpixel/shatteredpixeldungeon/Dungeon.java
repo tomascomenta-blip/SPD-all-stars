@@ -21,7 +21,12 @@
 
 package com.shatteredpixel.shatteredpixeldungeon;
 
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Amok;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.AscensionChallenge;
@@ -75,10 +80,29 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.AntiOP;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKDifficulty;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKWorlds;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.big.Colossus;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.reward.SpecPowers;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forgotten.ForgottenLastLevel;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forgotten.Tribe;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.kraken.Kraken;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.kraken.KrakenCall;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.kraken.KrakenLevel;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.Continent;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.hunt.AllyTest;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.awake.Awakening;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.city.cathedral.Cathedral;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.RiftLevel;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.ThalCall;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.ThalFinale;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
 import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.RitualTotems;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.SKQuests;
 import com.watabou.noosa.Game;
 import com.watabou.utils.BArray;
 import com.watabou.utils.Bundlable;
@@ -96,6 +120,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import java.util.LinkedHashSet;
 
 public class Dungeon {
 
@@ -130,6 +156,7 @@ public class Dungeon {
 		SHAMAN_WAND,
 		DM200_EQUIP,
 		GOLEM_EQUIP,
+		SK_GUNS, //guns dropped by the goblins of the alt-world forest
 
 		//containers
 		VELVET_POUCH,
@@ -182,7 +209,14 @@ public class Dungeon {
 	public static int challenges;
 	public static float mobsToChampion;
 
+	//the hero 'in context'. In single player this is simply the hero.
+	//In a cooperative run it is the hero whose turn/action is being processed, see Party
 	public static Hero hero;
+
+	//the hero controlled on this device, used by the interface
+	public static Hero local(){
+		return Party.active() ? Party.local() : hero;
+	}
 	public static Level level;
 
 	public static QuickSlot quickslot = new QuickSlot();
@@ -212,6 +246,12 @@ public class Dungeon {
 	public static String customSeedText = "";
 	public static long seed;
 	public static long lastPlayed;
+	//alt worlds: one bit per region (1-4), decided from the seed when the run starts
+	public static int skWorlds;
+	//difficulty of the run (SKDifficulty), chosen before it starts
+	public static int difficulty = 1;
+	//co-op: heroes can hurt each other (CoopRules), the host's choice in the room
+	public static boolean friendlyFire = false;
 
 	//we initialize the seed separately so that things like interlevelscene can access it early
 	public static void initSeed(){
@@ -233,6 +273,12 @@ public class Dungeon {
 	public static void init() {
 
 		initialVersion = version = Game.versionCode;
+		Party.reset();
+		skWorlds = SKWorlds.roll( seed,
+				SKDifficulty.worldChance() );
+		difficulty = SKDifficulty.chosen();
+		AntiOP.init();
+		friendlyFire = CoopSession.current != null && SPDSettings.coopFriendlyFire();
 		challenges = SPDSettings.challenges();
 		mobsToChampion = 1;
 
@@ -271,10 +317,15 @@ public class Dungeon {
 
 		LimitedDrops.reset();
 		
-		chapters = new HashSet<>();
+		chapters = new LinkedHashSet<>();
 		
 		Ghost.Quest.reset();
 		Wandmaker.Quest.reset();
+		Tribe.Quest.reset();
+		RitualTotems.reset();
+		SKQuests.reset();
+		ThalFinale.reset();
+		Continent.reset();
 		Blacksmith.Quest.reset();
 		Imp.Quest.reset();
 
@@ -299,8 +350,13 @@ public class Dungeon {
 		Dungeon.level = null;
 		Actor.clear();
 		
-		Level level;
-		if (branch == 0) {
+		Level level = SKWorlds.newLevel( depth );
+		if (level == null && SKWorlds.forgottenAmulet( depth )) {
+			level = new ForgottenLastLevel();
+		}
+		if (level != null) {
+			//an alt world replaces this region
+		} else if (branch == 0) {
 			switch (depth) {
 				case 1:
 				case 2:
@@ -353,6 +409,12 @@ public class Dungeon {
 				default:
 					level = new DeadEndLevel();
 			}
+		} else if (branch == 2 && depth == 20) {
+			level = new KrakenLevel();
+		} else if (branch == ThalFinale.BRANCH && depth == ThalFinale.DEPTH) {
+			level = new RiftLevel();
+		} else if (Continent.branch(branch)) {
+			level = Continent.newLevel(depth, branch);
 		} else if (branch == 1) {
 			switch (depth) {
 				case 11:
@@ -396,6 +458,7 @@ public class Dungeon {
 		Statistics.qualifiedForBossRemainsBadge = false;
 		
 		level.create();
+		if (Continent.branch(branch)) Continent.fixTransitions(level);
 		
 		if (branch == 0) Statistics.qualifiedForNoKilling = !bossLevel();
 		Statistics.qualifiedForBossChallengeBadge = false;
@@ -455,7 +518,8 @@ public class Dungeon {
 	public static boolean interfloorTeleportAllowed(){
 		if (Dungeon.level.locked
 				|| Dungeon.level instanceof MiningLevel || Dungeon.level instanceof VaultLevel
-				|| (Dungeon.hero != null && Dungeon.hero.belongings.getItem(Amulet.class) != null)){
+				|| (Dungeon.hero != null && Dungeon.hero.belongings.getItem(Amulet.class) != null)
+				|| Awakening.blocksTravel() || Cathedral.here()){
 			return false;
 		}
 		return true;
@@ -480,6 +544,10 @@ public class Dungeon {
 		Dungeon.level = level;
 		hero.pos = pos;
 
+		if (Party.active()){
+			placeParty( level, pos );
+		}
+
 		if (hero.buff(AscensionChallenge.class) != null){
 			hero.buff(AscensionChallenge.class).onLevelSwitch();
 		}
@@ -491,7 +559,7 @@ public class Dungeon {
 		level.addRespawner();
 		
 		for(Mob m : level.mobs){
-			if (m.pos == hero.pos && !Char.hasProp(m, Char.Property.IMMOVABLE)){
+			if (isPartyHeroCell(m.pos) && !Char.hasProp(m, Char.Property.IMMOVABLE)){
 				//displace mob
 				for(int i : PathFinder.NEIGHBOURS8){
 					if (Actor.findChar(m.pos+i) == null && level.passable[m.pos + i]){
@@ -502,10 +570,39 @@ public class Dungeon {
 			}
 		}
 		
-		Light light = hero.buff( Light.class );
-		hero.viewDistance = light == null ? level.viewDistance : Math.max( Light.DISTANCE, level.viewDistance );
-		
-		hero.curAction = hero.lastAction = null;
+		for (Hero h : Party.active() ? Party.heroes() : java.util.Collections.singletonList(hero)) {
+			Light light = h.buff(Light.class);
+			h.viewDistance = light == null ? level.viewDistance : Math.max(Light.DISTANCE, level.viewDistance);
+
+			h.curAction = h.lastAction = null;
+		}
+
+		//the dark continent: corruption, darkness, deepest floor
+		Continent.onArrive();
+
+		//testing (-Dspd.test.ally=turtle): a tamed beast of the dark continent comes along
+		AllyTest.arrive(level);
+
+		//testing (-Dspd.test.thalnow=1): on floor 1 the sky cracks at once, no need to walk out
+		if (DevFlags.thalNow() && depth == 1 && branch == 0 && !ThalFinale.called){
+			Hero leader = Party.active() ? Party.heroes().get(0) : hero;
+			if (leader.buff(ThalCall.class) == null) Buff.affect(leader, ThalCall.class);
+		}
+
+		//testing (-Dspd.test.kraken=1): on floor 20 the sea takes the party to the Kraken at once
+		if (DevFlags.kraken() && depth == 20 && branch == 0 && !levelHasBeenGenerated(20, 2)){
+			Hero leader = Party.active() ? Party.heroes().get(0) : hero;
+			if (leader.buff(KrakenCall.class) == null){
+				Buff.affect(leader, KrakenCall.class);
+				//what the submarine would have given
+				for (Hero h : Kraken.partyHeroes()){
+					PotionOfHealing p =
+							new PotionOfHealing();
+					p.quantity(2).identify();
+					Kraken.give(h, p);
+				}
+			}
+		}
 
 		observe();
 		try {
@@ -515,6 +612,65 @@ public class Dungeon {
 			/*This only catches IO errors. Yes, this means things can go wrong, and they can go wrong catastrophically.
 			But when they do the user will get a nice 'report this issue' dialogue, and I can fix the bug.*/
 		}
+	}
+
+	private static boolean isPartyHeroCell( int cell ){
+		if (!Party.active()) return cell == hero.pos;
+		for (Hero h : Party.living()){
+			if (h.pos == cell) return true;
+		}
+		return false;
+	}
+
+	//cooperative runs: the hero that took the transition arrives at pos, the others next to them.
+	//Fallen heroes come back when the party reaches a different floor.
+	private static void placeParty( Level level, int pos ){
+		int floorKey = depth + 1000*branch;
+		ArrayList<Integer> taken = new ArrayList<>();
+		taken.add(pos);
+		//a standing hero, whose clock the revived ones catch up with
+		Hero standing = hero.coopDown ? null : hero;
+		for (Hero h : Party.heroes()){
+			if (standing == null && !h.coopDown) standing = h;
+		}
+		boolean heroWasHere = hero.coopFloor == floorKey;
+		hero.coopFloor = floorKey;
+		for (Hero h : Party.heroes()){
+			if (h == hero) continue;
+			boolean sameFloor = h.coopFloor == floorKey;
+			if (h.coopDown && !sameFloor){
+				h.coopReviveOnFloor( standing );
+			}
+			if (!h.coopDown){
+				boolean keep = sameFloor && h.pos >= 0 && h.pos < level.length()
+						&& level.passable[h.pos] && !taken.contains(h.pos);
+				if (!keep){
+					h.pos = freeCellNear( level, pos, taken );
+				}
+				taken.add(h.pos);
+			}
+			h.coopFloor = floorKey;
+		}
+		//the hero that triggered the switch could also have been down (e.g. revived by the floor change)
+		if (hero.coopDown && !heroWasHere){
+			hero.coopReviveOnFloor( standing );
+		}
+	}
+
+	public static int freeCellNear( Level level, int pos, ArrayList<Integer> taken ){
+		PathFinder.buildDistanceMap( pos, BArray.or( level.passable, level.avoid, null ) );
+		int best = -1;
+		int bestDist = Integer.MAX_VALUE;
+		for (int i = 0; i < level.length(); i++){
+			if (i == pos || taken.contains(i) || !level.passable[i] || level.pit[i]) continue;
+			if (level.traps.get(i) != null) continue;
+			int d = PathFinder.distance[i];
+			if (d < bestDist){
+				best = i;
+				bestDist = d;
+			}
+		}
+		return best == -1 ? pos : best;
 	}
 
 	public static void dropToChasm( Item item ) {
@@ -620,7 +776,13 @@ public class Dungeon {
 	private static final String CHAPTERS	= "chapters";
 	private static final String QUESTS		= "quests";
 	private static final String BADGES		= "badges";
-	
+	private static final String COOP_HEROES = "coop_heroes";
+	private static final String COOP_NAMES  = "coop_names";
+	private static final String COOP_RNG    = "coop_rng";
+	private static final String SK_WORLDS   = "sk_worlds";
+	private static final String SK_DIFFICULTY = "sk_difficulty";
+	private static final String FRIENDLY_FIRE = "friendly_fire";
+
 	public static void saveGame( int save ) {
 		try {
 			Bundle bundle = new Bundle();
@@ -634,7 +796,19 @@ public class Dungeon {
 			bundle.put( LAST_PLAYED, lastPlayed = Game.realTime);
 			bundle.put( CHALLENGES, challenges );
 			bundle.put( MOBS_TO_CHAMPION, mobsToChampion );
-			bundle.put( HERO, hero );
+			bundle.put( SK_WORLDS, skWorlds );
+			bundle.put( SK_DIFFICULTY, difficulty );
+			AntiOP.store( bundle );
+			bundle.put( FRIENDLY_FIRE, friendlyFire );
+			//the leader is always stored as 'the' hero, partners are stored separately
+			bundle.put( HERO, Party.leader() );
+			if (Party.active()){
+				ArrayList<Hero> partners = new ArrayList<>(Party.heroes());
+				partners.remove(0);
+				bundle.put( COOP_HEROES, partners );
+				bundle.put( COOP_NAMES, Party.names().toArray(new String[0]) );
+				bundle.put( COOP_RNG, Random.baseState() );
+			}
 			bundle.put( DEPTH, depth );
 			bundle.put( BRANCH, branch );
 
@@ -663,6 +837,11 @@ public class Dungeon {
 			Wandmaker	.Quest.storeInBundle( quests );
 			Blacksmith	.Quest.storeInBundle( quests );
 			Imp			.Quest.storeInBundle( quests );
+			Tribe.Quest.storeInBundle( quests );
+			RitualTotems.storeInBundle( quests );
+			SKQuests.store( quests );
+			ThalFinale.store( quests );
+			Continent.store( quests );
 			bundle.put( QUESTS, quests );
 			
 			SpecialRoom.storeRoomsInBundle( bundle );
@@ -704,9 +883,12 @@ public class Dungeon {
 	}
 	
 	public static void saveAll() throws IOException {
-		if (hero != null && (hero.isAlive() || WndResurrect.instance != null)) {
+		if (hero != null && (Party.anyAlive() || WndResurrect.instance != null)) {
 			
-			Actor.fixTime();
+			//cooperative runs: shifting actor time is only safe where both devices do it (floor loading)
+			if (!Party.active() || InterlevelScene.onLoadingThread()) {
+				Actor.fixTime();
+			}
 			updateLevelExplored();
 			saveGame( GamesInProgress.curSlot );
 			saveLevel( GamesInProgress.curSlot );
@@ -731,6 +913,11 @@ public class Dungeon {
 		customSeedText = bundle.getString( CUSTOM_SEED );
 		daily = bundle.getBoolean( DAILY );
 		dailyReplay = bundle.getBoolean( DAILY_REPLAY );
+		//runs started before the alt worlds existed keep the regular regions
+		skWorlds = bundle.getInt( SK_WORLDS );
+		difficulty = bundle.contains( SK_DIFFICULTY ) ? bundle.getInt( SK_DIFFICULTY ) : 1;
+		AntiOP.restore( bundle );
+		friendlyFire = bundle.getBoolean( FRIENDLY_FIRE );
 
 		Actor.clear();
 		Actor.restoreNextID( bundle );
@@ -755,7 +942,7 @@ public class Dungeon {
 			
 			LimitedDrops.restore( bundle.getBundle(LIMDROPS) );
 
-			chapters = new HashSet<>();
+			chapters = new LinkedHashSet<>();
 			int ids[] = bundle.getIntArray( CHAPTERS );
 			if (ids != null) {
 				for (int id : ids) {
@@ -769,7 +956,17 @@ public class Dungeon {
 				Wandmaker.Quest.restoreFromBundle( quests );
 				Blacksmith.Quest.restoreFromBundle( quests );
 				Imp.Quest.restoreFromBundle( quests );
+				Tribe.Quest.restoreFromBundle( quests );
+				RitualTotems.restoreFromBundle( quests );
+				SKQuests.restore( quests );
+				ThalFinale.restore( quests );
+				Continent.restore( quests );
 			} else {
+				Tribe.Quest.reset();
+				RitualTotems.reset();
+				SKQuests.reset();
+				ThalFinale.reset();
+				Continent.reset();
 				Ghost.Quest.reset();
 				Wandmaker.Quest.reset();
 				Blacksmith.Quest.reset();
@@ -811,6 +1008,22 @@ public class Dungeon {
 		
 		hero = null;
 		hero = (Hero)bundle.get( HERO );
+
+		if (fullLoad && bundle.contains( COOP_HEROES )){
+			ArrayList<Hero> party = new ArrayList<>();
+			party.add( hero );
+			for (Bundlable b : bundle.getCollection( COOP_HEROES )){
+				party.add( (Hero)b );
+			}
+			ArrayList<String> names = new ArrayList<>();
+			String[] arr = bundle.getStringArray( COOP_NAMES );
+			if (arr != null) for (String n : arr) names.add(n);
+			Party.setup( party, names, Party.localIndexForLoad );
+			long rng = bundle.getLong( COOP_RNG );
+			if (rng >= 0) Random.setBaseState( rng );
+		} else if (fullLoad) {
+			Party.reset();
+		}
 		
 		depth = bundle.getInt( DEPTH );
 		branch = bundle.getInt( BRANCH );
@@ -870,6 +1083,8 @@ public class Dungeon {
 	}
 	
 	public static void fail( Object cause ) {
+		//cooperative runs only end when the whole party has fallen
+		if (Party.active() && Party.anyAlive()) return;
 		if (WndResurrect.instance == null) {
 			updateLevelExplored();
 			Statistics.gameWon = false;
@@ -895,7 +1110,11 @@ public class Dungeon {
 
 	//default to recomputing based on max hero vision, in case vision just shrank/grew
 	public static void observe(){
-		int dist = Math.max(Dungeon.hero.viewDistance, 8);
+		if (Party.active()){
+			observeParty( -1 );
+			return;
+		}
+		int dist = Math.max(Math.max(Dungeon.hero.viewDistance, SpecPowers.minSight(Dungeon.hero)), 8) + SpecPowers.sightBonus(Dungeon.hero);
 		dist *= 1f + 0.25f*Dungeon.hero.pointsInTalent(Talent.FARSIGHT);
 
 		if (Dungeon.hero.buff(MagicalSight.class) != null){
@@ -906,12 +1125,60 @@ public class Dungeon {
 	}
 	
 	public static void observe( int dist ) {
+		if (Party.active()){
+			observeParty( dist );
+			return;
+		}
+		observeSingle( dist, true, true );
+	}
+
+	private static boolean[] coopFov;
+
+	//cooperative runs share vision: the hero FOV is the union of what every living hero sees
+	private static void observeParty( final int fixedDist ){
+		if (level == null) {
+			return;
+		}
+		if (coopFov == null || coopFov.length != level.length()){
+			coopFov = new boolean[level.length()];
+		}
+		BArray.setFalse(level.heroFOV);
+		for (final Hero h : Party.living()){
+			Party.withHero(h, new Runnable() {
+				@Override
+				public void run() {
+					level.updateFieldOfView(h, coopFov);
+				}
+			});
+			BArray.or(level.heroFOV, coopFov, level.heroFOV);
+		}
+		for (final Hero h : Party.living()){
+			Party.withHero(h, new Runnable() {
+				@Override
+				public void run() {
+					int dist = fixedDist;
+					if (dist < 0) {
+						dist = Math.max(Math.max(h.viewDistance, SpecPowers.minSight(h)), 8) + SpecPowers.sightBonus(h);
+						dist *= 1f + 0.25f * h.pointsInTalent(Talent.FARSIGHT);
+						if (h.buff(MagicalSight.class) != null) {
+							dist = Math.max(dist, MagicalSight.DISTANCE);
+						}
+						dist++;
+					}
+					observeSingle(dist, false, false);
+				}
+			});
+		}
+		GameScene.afterObserve();
+	}
+
+	private static void observeSingle( int dist, boolean computeFov, boolean finish ) {
 
 		if (level == null) {
 			return;
 		}
 		
-		level.updateFieldOfView(hero, level.heroFOV);
+		if (computeFov) level.updateFieldOfView(hero, level.heroFOV);
 
 		int x = hero.pos % level.width();
 		int y = hero.pos / level.width();
@@ -1018,7 +1285,7 @@ public class Dungeon {
 			}
 		}
 
-		GameScene.afterObserve();
+		if (finish) GameScene.afterObserve();
 	}
 
 	//we store this to avoid having to re-allocate the array with each pathfind
@@ -1051,7 +1318,9 @@ public class Dungeon {
 
 		if (chars) {
 			for (Char c : Actor.chars()) {
-				if (vis[c.pos]) {
+				if (c instanceof Colossus) {
+					((Colossus) c).block( passable );
+				} else if (vis[c.pos]) {
 					passable[c.pos] = false;
 				}
 			}

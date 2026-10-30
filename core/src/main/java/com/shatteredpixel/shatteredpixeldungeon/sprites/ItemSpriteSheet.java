@@ -29,7 +29,7 @@ public class ItemSpriteSheet {
 	public static final int SIZE = 16;
 
 	private static final int TX_WIDTH = 256;
-	private static final int TX_HEIGHT = 512;
+	private static final int TX_HEIGHT = 672; //rows for the new heroes, rift rewards and alternate world guns; must match items.png
 
 	private static final int WIDTH = TX_WIDTH / SIZE;
 
@@ -395,7 +395,270 @@ public class ItemSpriteSheet {
 		assignItemRect(ARMOR_CLERIC,    13, 14);
 	}
 
-	                                                                                    //16 free slots
+	//the champion classes (ours)
+	private static final int CHAMPIONS          =                           xy(1, 13);  //16 slots
+	public static final int KIT_EXECUTIONER = CHAMPIONS+0;
+	public static final int KIT_SCOUT       = CHAMPIONS+1;
+	public static final int KIT_PYROMANCER  = CHAMPIONS+2;
+	public static final int KIT_JAILER      = CHAMPIONS+3;
+	public static final int KIT_BRAWLER     = CHAMPIONS+4;
+	public static final int EXECUTIONER_AXE = CHAMPIONS+5;
+	public static final int BLOWGUN         = CHAMPIONS+6;
+	public static final int BLOWDART        = CHAMPIONS+7;
+	public static final int CHAIN_SICKLE    = CHAMPIONS+8;
+	public static final int SOUL            = CHAMPIONS+9;
+	public static final int BRASS_KNUCKLES  = CHAMPIONS+10;
+	public static final int KIT_GRAVEDIGGER = CHAMPIONS+11;
+	public static final int KIT_GUARDIAN    = CHAMPIONS+12;
+	public static final int KIT_BARD        = CHAMPIONS+13;
+	public static final int SHOVEL          = CHAMPIONS+14;
+	public static final int SAND_STAFF      = CHAMPIONS+15;
+	//two cells of the free corner of the rift rewards rows (7,30)-(8,30)
+	public static final int KIT_FORGER      = xy(8, 31);
+	public static final int FORGE_HAMMER    = xy(9, 31);
+	static{
+		assignItemRect(KIT_FORGER, 16, 16);
+		assignItemRect(FORGE_HAMMER, 16, 16);
+		for (int i = CHAMPIONS; i <= SAND_STAFF; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//botanico: Botanist items (row 35 of items.png, y=544)
+	private static final int BOTANICAL          =                           xy(1, 35);  //4 slots claimed
+	public static final int KIT_BOTANIST    = BOTANICAL+0;
+	public static final int WOODEN_STAFF    = BOTANICAL+1;
+	public static final int THORN           = BOTANICAL+2;
+	static{
+		for (int i = BOTANICAL; i <= THORN; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//Ironlord (row 34 of items.png)
+	private static final int IRONLORD_ITEMS =                           xy(1, 34);  //4 slots
+	public static final int KIT_IRONLORD    = IRONLORD_ITEMS+0;
+	public static final int IRON_MACE       = IRONLORD_ITEMS+1;
+	static{
+		for (int i = IRONLORD_ITEMS; i <= IRON_MACE; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//alt worlds: guns (row 36 of items.png, y=560; row 37 is kept for the next guns)
+	private static final int SK_GUNS        =                           xy(1, 36);  //32 slots
+	public static final int METEOR_STAFF    = SK_GUNS+0;
+	public static final int GOBLIN_PISTOL   = SK_GUNS+1;
+	public static final int GOBLIN_SHOTGUN  = SK_GUNS+2;
+	public static final int SHADOW_BLADE    = SK_GUNS+3;
+	public static final int VOID_RIFLE      = SK_GUNS+4;
+	public static final int ABYSS_SONAR     = SK_GUNS+5;
+	//row 37: alt world heroes
+	public static final int KIT_AUTOMATON   = SK_GUNS+16;
+	public static final int KIT_BEASTMASTER = SK_GUNS+17;
+	public static final int WRENCH          = SK_GUNS+18;
+	public static final int SATELLITE_CANNON= SK_GUNS+19;
+	public static final int CRISPY_BONE     = SK_GUNS+20;
+	public static final int KIT_SPIRITIST   = SK_GUNS+21;
+	public static final int KIT_GUNSLINGER  = SK_GUNS+22;
+	public static final int PLAGUE_STAFF    = SK_GUNS+23;
+	public static final int JUSTICE_REVOLVER= SK_GUNS+24;
+	//phase 5: the armory (rows 36 and 37, and row 39 below)
+	public static final int OLD_PISTOL      = SK_GUNS+6;
+	public static final int DESERT_EAGLE    = SK_GUNS+7;
+	public static final int SMG             = SK_GUNS+8;
+	public static final int SHOTGUN         = SK_GUNS+9;
+	public static final int ASSAULT_RIFLE   = SK_GUNS+10;
+	public static final int SNIPER_RIFLE    = SK_GUNS+11;
+	public static final int GATLING         = SK_GUNS+12;
+	public static final int BAZOOKA         = SK_GUNS+13;
+	public static final int GRENADE_LAUNCHER= SK_GUNS+14;
+	public static final int LASER_RIFLE     = SK_GUNS+15;
+	public static final int PLASMA_CANNON   = SK_GUNS+25;
+	public static final int FLAMETHROWER    = SK_GUNS+26;
+	public static final int FROST_GUN       = SK_GUNS+27;
+	public static final int THUNDER_STAFF   = SK_GUNS+28;
+	public static final int SK_BOW          = SK_GUNS+29;
+	public static final int SK_CROSSBOW     = SK_GUNS+30;
+	public static final int BUBBLE_GUN      = SK_GUNS+31;
+	static{
+		for (int i = SK_GUNS; i < SK_GUNS+32; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//alt worlds: projectiles drawn in the middle of their cell (row 38, y=592)
+	private static final int SK_SHOTS       =                           xy(1, 38);  //16 slots
+	public static final int SHOT_BULLET     = SK_SHOTS+0;
+	public static final int SHOT_STAR       = SK_SHOTS+1;
+	public static final int SHOT_METEOR     = SK_SHOTS+2;
+	public static final int SHOT_PELLET     = SK_SHOTS+3;
+	public static final int SHOT_BUBBLE     = SK_SHOTS+4;
+	public static final int SHOT_ORB        = SK_SHOTS+5;
+	public static final int SHOT_BLADE      = SK_SHOTS+6;  //triangle bullet of the knights
+	public static final int SHOT_BIG_ORB    = SK_SHOTS+7;
+	public static final int SHOT_LASER      = SK_SHOTS+8;
+	public static final int SHOT_TORPEDO    = SK_SHOTS+9;
+	public static final int SHOT_SPIKE      = SK_SHOTS+10; //purple spike of the Varkolyns
+	public static final int SHOT_MINE       = SK_SHOTS+11;
+	public static final int SHOT_PLAGUE     = SK_SHOTS+12; //green spike of the plague staff
+	public static final int SHOT_BOMB       = SK_SHOTS+13; //bomb of the air strike
+	public static final int SHOT_ARROW      = SK_SHOTS+14;
+	public static final int SHOT_ROCKET     = SK_SHOTS+15;
+	static{
+		for (int i = SK_SHOTS; i < SK_SHOTS+16; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//alt world armory, more guns (row 39, y=608)
+	private static final int SK_GUNS2       =                           xy(1, 39);  //16 slots
+	public static final int TOXIC_BLASTER   = SK_GUNS2+0;
+	public static final int STUN_PISTOL     = SK_GUNS2+1;
+	public static final int FIREWORK_LAUNCHER= SK_GUNS2+2;
+	//the Kraken
+	public static final int SHIP_HAMMER     = SK_GUNS2+3;
+	public static final int KRAKEN_HARPOON  = SK_GUNS2+4;
+	public static final int KRAKEN_EYE      = SK_GUNS2+5;
+	//the Forgotten Land
+	public static final int FLINT_SPEAR     = SK_GUNS2+6;
+	public static final int HIDE_ARMOR      = SK_GUNS2+7;
+	public static final int RAPTOR_EGG      = SK_GUNS2+8;
+	public static final int THAROG_HEART    = SK_GUNS2+9;
+	public static final int SACRED_FLAME    = SK_GUNS2+10;
+	public static final int DINO_EGG        = SK_GUNS2+11;
+	public static final int FOSSIL          = SK_GUNS2+12;
+	//the dark grand knight
+	public static final int OATH_SHIELD     = SK_GUNS2+13;
+	public static final int OATH_SHIELD_LIT = SK_GUNS2+14;
+	static{
+		for (int i = SK_GUNS2; i < SK_GUNS2+16; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//rewards of the reworked bosses (row 40, y=624)
+	private static final int SK_BOSSES      =                           xy(1, 40);  //16 slots
+	public static final int PORTABLE_TOTEM  = SK_BOSSES+0;
+	public static final int PORTABLE_TOTEM_LIT = SK_BOSSES+1;
+	public static final int PRIEST_BRACERS  = SK_BOSSES+2;
+	public static final int HIVE_HEART      = SK_BOSSES+3;
+	public static final int HIVE_HEART_LIT  = SK_BOSSES+4;
+	//the quests of the forest and the sewers share the rest of the row
+	public static final int HUNTER_TRAP     = SK_BOSSES+5;
+	public static final int GREY_TUSK_FANG  = SK_BOSSES+6;
+	public static final int TUSK_SPEAR      = SK_BOSSES+7;
+	public static final int BOAR_CLOAK      = SK_BOSSES+8;
+	public static final int HUNTING_HORN    = SK_BOSSES+9;
+	public static final int CAIMAN_TOOTH    = SK_BOSSES+10;
+	public static final int CAIMAN_HIDE     = SK_BOSSES+11;
+	public static final int SEWER_HOOK      = SK_BOSSES+12;
+	public static final int SEWER_LANTERN   = SK_BOSSES+13;
+	public static final int JOUSTING_LANCE  = SK_BOSSES+14;
+	public static final int CHAMPION_ARMOR  = SK_BOSSES+15;
+	static{
+		for (int i = SK_BOSSES; i < SK_BOSSES+16; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//more quest rewards (row 41, y=640)
+	private static final int SK_QUESTS      =                           xy(1, 41);  //32 slots (rows 41 and 42)
+	public static final int HERALD_BANNER   = SK_QUESTS+0;
+	public static final int WORM_TOOTH      = SK_QUESTS+1;
+	public static final int WORM_DRILL      = SK_QUESTS+2;
+	public static final int STONE_SCALE_MAIL= SK_QUESTS+3;
+	public static final int POWDER_SACK     = SK_QUESTS+4;
+	public static final int HYDRAULIC_FIST  = SK_QUESTS+5;
+	public static final int SPARE_CELL      = SK_QUESTS+6;
+	public static final int PLASMA_SHIELD   = SK_QUESTS+7;
+	public static final int DIVE_SUIT       = SK_QUESTS+8;
+	public static final int HARPOON_GLAIVE  = SK_QUESTS+9;
+	public static final int STABLE_SAMPLE   = SK_QUESTS+10;
+	public static final int GOLEM_CORE      = SK_QUESTS+11;
+	public static final int RUNE_HAMMER     = SK_QUESTS+12;
+	public static final int GOLEM_PLATE     = SK_QUESTS+13;
+	public static final int RUNE_STONE      = SK_QUESTS+14;
+	public static final int YETI_CLAWS      = SK_QUESTS+15;
+	public static final int YETI_MANTLE     = SK_QUESTS+16;
+	public static final int FROST_FANG      = SK_QUESTS+17;
+	public static final int PALADIN_BLADE   = SK_QUESTS+18;
+	public static final int BLESSED_PLATE   = SK_QUESTS+19;
+	public static final int PALADIN_RELIC   = SK_QUESTS+20;
+	static{
+		for (int i = SK_QUESTS; i < SK_QUESTS+32; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//loot of Thal-Vekhorr, the end of hours (rest of row 42, y=656, after the quest rewards)
+	private static final int THAL_LOOT      =                           xy(6, 42);  //11 slots
+	public static final int THAL_HEART      = THAL_LOOT+0;
+	public static final int CLOCKMAKER_CHEST= THAL_LOOT+1;
+	public static final int MELTED_CLOCK    = THAL_LOOT+2;
+	public static final int MELTED_CLOCK_LIT= THAL_LOOT+3;
+	public static final int MINUTE_HAND     = THAL_LOOT+4;
+	public static final int PENDULUM        = THAL_LOOT+5;
+	public static final int GEAR_PLATE      = THAL_LOOT+6;
+	static{
+		for (int i = THAL_LOOT; i <= GEAR_PLATE; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//the dark continent (same row, last 4 slots)
+	private static final int CONTINENT      =                           xy(13, 42);
+	public static final int SACRED_ESSENCE  = CONTINENT+0;
+	public static final int TAINTED_RATION  = CONTINENT+1;
+	public static final int TAINTED_MEAT    = CONTINENT+2;
+	static{
+		assignItemRect(SACRED_ESSENCE, 12, 14);
+		assignItemRect(TAINTED_RATION, 16, 12);
+		assignItemRect(TAINTED_MEAT, 14, 12);
+	}
+
+	//surviving the dark continent (row 35, after the botanist's, y=544)
+	private static final int SURVIVAL       =                           xy(9, 35);  //7 slots
+	public static final int CAMPFIRE_KIT    = SURVIVAL+0;
+	public static final int SACRED_TORCH    = SURVIVAL+1;
+	public static final int COLOSSUS_BONE   = SURVIVAL+2;
+	public static final int COLOSSUS_MEAT   = SURVIVAL+3;
+	public static final int COLOSSUS_ROAST  = SURVIVAL+4;
+	public static final int BAIT            = SURVIVAL+5;
+	public static final int POULTICE        = SURVIVAL+6;
+	static{
+		for (int i = SURVIVAL; i <= POULTICE; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//hunting the big ones of the Dark Continent: their parts, the grapple, the collar of light
+	private static final int HUNT           =                           xy(5, 34);  //12 slots
+	public static final int MUTATION_PART   = HUNT+0;   //10 kinds in a row
+	public static final int BONE_GRAPPLE    = HUNT+10;
+	public static final int LIGHT_COLLAR    = HUNT+11;
+	static{
+		for (int i = HUNT; i <= LIGHT_COLLAR; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
+
+	//rewards of the Summoner's Rift bosses of cooperative runs (row 33 of items.png)
+	private static final int RIFT_LOOT      =                           xy(1, 33);  //16 slots
+	public static final int DRAKE_ARMOR_INFERNAL = RIFT_LOOT+0;
+	public static final int DRAKE_ARMOR_OCEAN    = RIFT_LOOT+1;
+	public static final int DRAKE_ARMOR_CLOUD    = RIFT_LOOT+2;
+	public static final int DRAKE_ARMOR_MOUNTAIN = RIFT_LOOT+3;
+	public static final int DRAKE_ARMOR_HEXTECH  = RIFT_LOOT+4;
+	public static final int DRAKE_ARMOR_CHEMTECH = RIFT_LOOT+5;
+	public static final int ELDER_BLADE          = RIFT_LOOT+6;
+	public static final int HERALD_EYE           = RIFT_LOOT+7;
+	public static final int BLOOD_ROSE           = RIFT_LOOT+8;
+	static{
+		for (int i = RIFT_LOOT; i <= BLOOD_ROSE; i++){
+			assignItemRect(i, 16, 16);
+		}
+	}
 
 	private static final int WANDS              =                           xy(1, 14);  //16 slots
 	public static final int WAND_MAGIC_MISSILE  = WANDS+0;

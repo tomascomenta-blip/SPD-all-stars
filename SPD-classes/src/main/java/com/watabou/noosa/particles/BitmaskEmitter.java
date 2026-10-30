@@ -53,8 +53,8 @@ public class BitmaskEmitter extends Emitter {
 
 		float x, y;
 		do {
-			x = Random.Float( frame.width() ) * mapW;
-			y = Random.Float( frame.height() ) * mapH;
+			x = Random.Visual.Float( frame.width() ) * mapW;
+			y = Random.Visual.Float( frame.height() ) * mapH;
 		} while ((map.bitmap.getPixel( (int)(x + ofsX), (int)(y + ofsY) ) & 0x000000FF) == 0);
 
 		factory.emit( this, index,

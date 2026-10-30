@@ -33,6 +33,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Degrade;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.champions.forger.LivingForge;
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
@@ -272,7 +274,11 @@ public class Item implements Bundlable {
 		}
 
 		items.add( this );
-		Dungeon.quickslot.replacePlaceholder(this);
+		//cooperative runs: the quick slots are this device's, the other hero's items don't go there
+		if (!Party.active()
+				|| container.owner == null || container.owner == Dungeon.local()) {
+			Dungeon.quickslot.replacePlaceholder(this);
+		}
 		Collections.sort( items, itemComparator );
 		updateQuickslot();
 		return true;
@@ -386,9 +392,9 @@ public class Item implements Bundlable {
 		//only the hero can be affected by Degradation
 		if (Dungeon.hero != null && Dungeon.hero.buff( Degrade.class ) != null
 			&& (isEquipped( Dungeon.hero ) || Dungeon.hero.belongings.contains( this ))) {
-			return Degrade.reduceLevel(level());
+			return Degrade.reduceLevel(level()) + LivingForge.bonus(this); //forged equipment
 		} else {
-			return level();
+			return level() + LivingForge.bonus(this); //forged equipment
 		}
 	}
 

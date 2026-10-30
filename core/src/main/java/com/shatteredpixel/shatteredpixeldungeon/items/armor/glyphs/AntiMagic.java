@@ -68,16 +68,18 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Shocki
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.HolyDart;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.DisintegrationTrap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.GrimTrap;
+import com.shatteredpixel.shatteredpixeldungeon.rift.Drake;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.watabou.utils.Random;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class AntiMagic extends Armor.Glyph {
 
 	private static ItemSprite.Glowing TEAL = new ItemSprite.Glowing( 0x88EEFF );
 	
-	public static final HashSet<Class> RESISTS = new HashSet<>();
+	public static final HashSet<Class> RESISTS = new LinkedHashSet<>();
 	static {
 		RESISTS.add( MagicalSleep.class );
 		RESISTS.add( Charm.class );
@@ -133,6 +135,7 @@ public class AntiMagic extends Armor.Glyph {
 		RESISTS.add( Eye.DeathGaze.class );
 		RESISTS.add( YogFist.BrightFist.LightBeam.class );
 		RESISTS.add( YogFist.DarkFist.DarkBolt.class );
+		RESISTS.add( Drake.Strike.class );
 	}
 	
 	@Override

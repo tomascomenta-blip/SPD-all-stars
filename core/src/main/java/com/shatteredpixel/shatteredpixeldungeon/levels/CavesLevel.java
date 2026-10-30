@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.levels;
 
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.WormQuest;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
@@ -88,7 +89,23 @@ public class CavesLevel extends RegularLevel {
 
 	@Override
 	protected ArrayList<Room> initRooms() {
-		return Blacksmith.Quest.spawn(super.initRooms());
+		return questRooms(super.initRooms());
+	}
+
+	//the room of the blacksmith (the starship has its own quest instead)
+	protected ArrayList<Room> questRooms( ArrayList<Room> rooms ){
+		return Blacksmith.Quest.spawn(rooms);
+	}
+
+	@Override
+	protected void createMobs() {
+		placeQuests();
+		super.createMobs();
+	}
+
+	//the old dwarf miner and the rock worm
+	protected void placeQuests() {
+		WormQuest.spawn( this, rooms, roomEntrance );
 	}
 	
 	@Override

@@ -21,6 +21,10 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.levels;
 
+import com.shatteredpixel.shatteredpixeldungeon.champions.ironlord.DuelRealm;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopLog;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -97,8 +101,11 @@ import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Swiftthistle;
+import com.shatteredpixel.shatteredpixeldungeon.rift.RiftBosses;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKChampion;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.reward.SpecPowers;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -118,8 +125,13 @@ import com.watabou.utils.SparseArray;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+
+import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 
 public abstract class Level implements Bundlable {
 	
@@ -145,6 +157,9 @@ public abstract class Level implements Bundlable {
 	protected int width;
 	protected int height;
 	protected int length;
+
+	//first row of the separate duel room added at the bottom of the map, -1 if there is none
+	public int realmTop = -1;
 	
 	protected static final float TIME_TO_RESPAWN	= 50;
 
@@ -179,6 +194,8 @@ public abstract class Level implements Bundlable {
 
 	//when a boss level has become locked.
 	public boolean locked = false;
+	//cooperative runs: the boss of the Summoner's Rift of this floor already came
+	public boolean riftSpawned = false;
 	
 	public HashSet<Mob> mobs;
 	public SparseArray<Heap> heaps;
@@ -228,6 +245,10 @@ public abstract class Level implements Bundlable {
 			if (Dungeon.posNeeded()) {
 				Dungeon.LimitedDrops.STRENGTH_POTIONS.count++;
 				addItemToSpawn( new PotionOfStrength() );
+				//cooperative runs: one for each hero
+				for (int i = 1; i < Party.size(); i++) {
+					addItemToSpawn( new PotionOfStrength() );
+				}
 			}
 			if (Dungeon.souNeeded()) {
 				Dungeon.LimitedDrops.UPGRADE_SCROLLS.count++;
@@ -237,6 +258,10 @@ public abstract class Level implements Bundlable {
 				//or give a random scroll (from a separate RNG) instead of every 2nd SOU
 				if (!Dungeon.isChallenged(Challenges.NO_SCROLLS) || Dungeon.LimitedDrops.UPGRADE_SCROLLS.count%2 != 0){
 					addItemToSpawn(new ScrollOfUpgrade());
+					//cooperative runs: one for each hero
+					for (int i = 1; i < Party.size(); i++) {
+						addItemToSpawn(new ScrollOfUpgrade());
+					}
 				}
 			}
 			if (Dungeon.asNeeded()) {
@@ -304,9 +329,9 @@ public abstract class Level implements Bundlable {
 
 			transitions = new ArrayList<>();
 
-			mobs = new HashSet<>();
+			mobs = new LinkedHashSet<>();
 			heaps = new SparseArray<>();
-			blobs = new HashMap<>();
+			blobs = new LinkedHashMap<>();
 			plants = new SparseArray<>();
 			traps = new SparseArray<>();
 			customTiles = new ArrayList<>();
@@ -321,7 +346,47 @@ public abstract class Level implements Bundlable {
 		createMobs();
 		createItems();
 
+		//the room where an Ironlord's Realm of Death duels take place
+		if (DuelRealm.wanted()){
+			DuelRealm.build(this);
+		}
+
 		Random.popGenerator();
+	}
+
+	//grows the map downwards, so no existing cell changes its index
+	public void appendRows( int n ){
+		int[] oldMap = map;
+		int oldLength = length;
+		boolean[] oldVisited = visited;
+		boolean[] oldMapped = mapped;
+		height += n;
+		length = width * height;
+		map = new int[length];
+		Arrays.fill( map, Terrain.WALL );
+		System.arraycopy( oldMap, 0, map, 0, oldLength );
+		visited = new boolean[length];
+		System.arraycopy( oldVisited, 0, visited, 0, oldLength );
+		mapped = new boolean[length];
+		System.arraycopy( oldMapped, 0, mapped, 0, oldLength );
+		heroFOV = new boolean[length];
+		passable = new boolean[length];
+		losBlocking = new boolean[length];
+		flamable = new boolean[length];
+		secret = new boolean[length];
+		solid = new boolean[length];
+		avoid = new boolean[length];
+		water = new boolean[length];
+		pit = new boolean[length];
+		openSpace = new boolean[length];
+		PathFinder.setMapSize( width, height );
+		for (Blob b : blobs.values()){
+			b.growTo( length );
+		}
+	}
+
+	public boolean inRealm( int cell ){
+		return realmTop >= 0 && cell / width >= realmTop;
 	}
 	
 	public void setSize(int w, int h){
@@ -377,10 +442,11 @@ public abstract class Level implements Bundlable {
 		}
 
 		setSize( bundle.getInt(WIDTH), bundle.getInt(HEIGHT));
+		realmTop = bundle.contains("realm_top") ? bundle.getInt("realm_top") : -1; //mordekaiser
 		
-		mobs = new HashSet<>();
+		mobs = new LinkedHashSet<>();
 		heaps = new SparseArray<>();
-		blobs = new HashMap<>();
+		blobs = new LinkedHashMap<>();
 		plants = new SparseArray<>();
 		traps = new SparseArray<>();
 		customTiles = new ArrayList<>();
@@ -391,6 +457,7 @@ public abstract class Level implements Bundlable {
 
 		visited	= bundle.getBooleanArray( VISITED );
 		mapped	= bundle.getBooleanArray( MAPPED );
+		riftSpawned = bundle.getBoolean( "rift_spawned" );
 
 		transitions = new ArrayList<>();
 		for (Bundlable b : bundle.getCollection( TRANSITIONS )){
@@ -486,9 +553,11 @@ public abstract class Level implements Bundlable {
 		bundle.put( VERSION, Game.versionCode );
 		bundle.put( WIDTH, width );
 		bundle.put( HEIGHT, height );
+		bundle.put( "realm_top", realmTop ); //mordekaiser
 		bundle.put( MAP, map );
 		bundle.put( VISITED, visited );
 		bundle.put( MAPPED, mapped );
+		bundle.put( "rift_spawned", riftSpawned );
 		bundle.put( TRANSITIONS, transitions );
 		bundle.put( LOCKED, locked );
 		bundle.put( HEAPS, heaps.valueList() );
@@ -540,6 +609,7 @@ public abstract class Level implements Bundlable {
 
 		Mob m = Reflection.newInstance(mobsToSpawn.remove(0));
 		ChampionEnemy.rollForChampion(m);
+		SKChampion.roll(m);
 		return m;
 	}
 
@@ -642,16 +712,95 @@ public abstract class Level implements Bundlable {
 		}
 	}
 
+	//cooperative runs: set by seal(); the party is gathered once the level has finished closing the arena
+	//(boss levels close their door or wall up their entrance right after calling super.seal())
+	private boolean gatherPending = false;
+
 	public void seal(){
 		if (!locked) {
 			locked = true;
 			Buff.affect(Dungeon.hero, LockedFloor.class);
+			//cooperative runs: the whole party is pulled into the boss fight (see gatherParty)
+			if (Party.active()){
+				gatherPending = true;
+				//and a boss of the Summoner's Rift joins the regular one
+				RiftBosses.onSeal(this);
+			}
+		}
+	}
+
+	//cooperative runs: called after a boss closed the arena. Every hero joins the hero who closed it.
+	public void gatherParty(){
+		if (!gatherPending) return;
+		gatherPending = false;
+		regroupParty(true);
+	}
+
+	//cooperative runs: heroes who can't walk to the hero in context (left outside a closed door, or inside
+	//a wall after the boss changed the map) appear next to it, and so do their allies. With pullFar, heroes
+	//more than 4 cells away come too. Everything is decided from the level, so every device does the same.
+	public void regroupParty( boolean pullFar ){
+		if (!Party.active()) return;
+		ArrayList<Hero> living = Party.living();
+		if (living.isEmpty()) return;
+		Hero anchor = living.contains(Dungeon.hero) ? Dungeon.hero : living.get(0);
+
+		PathFinder.buildDistanceMap(anchor.pos, passable);
+		int[] dist = PathFinder.distance.clone();
+
+		ArrayList<Integer> taken = new ArrayList<>();
+		taken.add(anchor.pos);
+		ArrayList<Char> movers = new ArrayList<>();
+		for (Hero h : living){
+			if (h == anchor) continue;
+			if (locked) Buff.affect(h, LockedFloor.class);
+			boolean outside = dist[h.pos] == Integer.MAX_VALUE;
+			if (outside || (pullFar && distance(h.pos, anchor.pos) > 4)){
+				movers.add(h);
+			} else {
+				taken.add(h.pos);
+			}
+		}
+		ArrayList<Mob> allies = new ArrayList<>();
+		for (Mob m : mobs){
+			if (m.alignment == Char.Alignment.ALLY && !m.properties().contains(Char.Property.IMMOVABLE)
+					&& dist[m.pos] == Integer.MAX_VALUE){
+				allies.add(m);
+			}
+		}
+		Collections.sort(allies, new Comparator<Mob>() {
+			@Override
+			public int compare(Mob a, Mob b) {
+				return Integer.compare(a.id(), b.id());
+			}
+		});
+		movers.addAll(allies);
+		CoopLog.line("party regroup" + (pullFar ? " (seal)" : "")
+				+ " depth=" + Dungeon.depth + " anchor=" + anchor.pos + " heroes=" + living.size() + " moved=" + movers.size());
+
+		for (Char ch : movers){
+			int best = -1;
+			for (int i = 0; i < length(); i++){
+				if (dist[i] == Integer.MAX_VALUE || taken.contains(i)) continue;
+				if (!passable[i] || pit[i] || Actor.findChar(i) != null) continue;
+				if (best == -1 || dist[i] < dist[best]) best = i;
+			}
+			if (best == -1) break;
+			taken.add(best);
+			ScrollOfTeleportation.appear(ch, best);
 		}
 	}
 
 	public void unseal(){
+		//cooperative runs: wait for the boss of the Summoner's Rift too (it unseals when it dies)
+		if (RiftBosses.keepSealed(this)) return;
 		if (locked) {
 			locked = false;
+			for (Hero h : Party.active() ? Party.heroes() : java.util.Collections.singletonList(Dungeon.hero)){
+				if (h.buff(LockedFloor.class) != null && h != Dungeon.hero){
+					h.buff(LockedFloor.class).detach();
+				}
+			}
 			if (Dungeon.hero.buff(LockedFloor.class) != null){
 				Dungeon.hero.buff(LockedFloor.class).detach();
 			}
@@ -679,6 +828,11 @@ public abstract class Level implements Bundlable {
 			if (b.activeDepth() == Dungeon.depth) items.add(b.cancel());
 		}
 		return items;
+	}
+
+	//how fast the water texture slides (pixels per second); the ship of the Kraken sails faster
+	public float waterSpeed() {
+		return 5f;
 	}
 
 	public Group addVisuals() {
@@ -803,6 +957,7 @@ public abstract class Level implements Bundlable {
 			cell = Random.Int( length() );
 
 		} while ((Dungeon.level == this && heroFOV[cell])
+				|| inRealm(cell) //mordekaiser
 				|| !passable[cell]
 				|| (Char.hasProp(ch, Char.Property.LARGE) && !openSpace[cell])
 				|| Actor.findChar( cell ) != null);
@@ -814,6 +969,7 @@ public abstract class Level implements Bundlable {
 		do {
 			cell = Random.Int( length() );
 		} while (!passable[cell]
+				|| inRealm(cell) //mordekaiser
 				|| (Char.hasProp(ch, Char.Property.LARGE) && !openSpace[cell]));
 		return cell;
 	}
@@ -1161,6 +1317,9 @@ public abstract class Level implements Bundlable {
 	}
 	
 	public void occupyCell( Char ch ){
+		//cooperative runs: the arena of a boss was just closed (boss levels seal from occupyCell)
+		if (gatherPending && ch instanceof Hero) gatherParty();
+
 		if (!ch.isImmune(Web.class) && Blob.volumeAt(ch.pos, Web.class) > 0){
 			blobs.get(Web.class).clear(ch.pos);
 			Web.affectChar( ch );
@@ -1364,6 +1523,8 @@ public abstract class Level implements Bundlable {
 
 			float viewDist = c.viewDistance;
 			if (c instanceof Hero){
+				//a lightbearer carries their own light
+				viewDist = Math.max(viewDist, SpecPowers.minSight((Hero) c)) + SpecPowers.sightBonus((Hero) c);
 				viewDist *= 1f + 0.25f*((Hero) c).pointsInTalent(Talent.FARSIGHT);
 				viewDist *= EyeOfNewt.visionRangeMultiplier();
 			}
@@ -1438,6 +1599,16 @@ public abstract class Level implements Bundlable {
 				if (((Hero) c).hasTalent(Talent.HEIGHTENED_SENSES)) {
 					mindVisRange = 1 + ((Hero) c).pointsInTalent(Talent.HEIGHTENED_SENSES);
 				}
+				if (((Hero) c).hasTalent(Talent.SCO_KEEN_SENSES)) {
+					mindVisRange = Math.max(mindVisRange, 1 + ((Hero) c).pointsInTalent(Talent.SCO_KEEN_SENSES));
+				}
+				//alt worlds: the Automaton's scanner and the Beastmaster's tracker
+				if (((Hero) c).hasTalent(Talent.AUT_SCANNER)) {
+					mindVisRange = Math.max(mindVisRange, 1 + ((Hero) c).pointsInTalent(Talent.AUT_SCANNER));
+				}
+				if (((Hero) c).hasTalent(Talent.BM_TRACKER)) {
+					mindVisRange = Math.max(mindVisRange, 1 + ((Hero) c).pointsInTalent(Talent.BM_TRACKER));
+				}
 				if (c.buff(DivineSense.DivineSenseTracker.class) != null) {
 					if (((Hero) c).heroClass == HeroClass.CLERIC) {
 						mindVisRange = 4 + 4 * ((Hero) c).pointsInTalent(Talent.DIVINE_SENSE);
@@ -1470,6 +1641,18 @@ public abstract class Level implements Bundlable {
 				}
 			}
 			
+			//yog hunters smell their prey through the walls
+			int preyRange = SpecPowers.preySense((Hero) c);
+			if (preyRange > 0) {
+				for (Mob mob : mobs) {
+					if (SpecPowers.isPrey(mob) && distance(c.pos, mob.pos) <= preyRange) {
+						for (int i : PathFinder.NEIGHBOURS9) {
+							heroMindFov[mob.pos + i] = true;
+						}
+					}
+				}
+			}
+
 			if (c.buff( Awareness.class ) != null) {
 				for (Heap heap : heaps.valueList()) {
 					int p = heap.pos;
@@ -1550,7 +1733,7 @@ public abstract class Level implements Bundlable {
 		int ay = a / width();
 		int bx = b % width();
 		int by = b / width();
-		return (float)Math.sqrt(Math.pow(Math.abs( ax - bx ), 2) + Math.pow(Math.abs( ay - by ), 2));
+		return (float)Math.sqrt(StrictMath.pow(Math.abs( ax - bx ), 2) + StrictMath.pow(Math.abs( ay - by ), 2));
 	}
 
 	//usually just if the base terrain of a cell is solid, but other cases exist too

@@ -32,6 +32,8 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.Continent;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.world.WndWorldMap;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndChallenges;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndGame;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndJournal;
@@ -88,7 +90,7 @@ public class MenuPane extends Component {
 		depthIcon = Icons.get(Dungeon.level.feeling);
 		add(depthIcon);
 
-		depthText = new BitmapText( Integer.toString( Dungeon.depth ), PixelScene.pixelFont);
+		depthText = new BitmapText( Continent.depthLabel(), PixelScene.pixelFont);
 		depthText.hardlight( 0xCACFC2 );
 		depthText.measure();
 		add( depthText );
@@ -96,7 +98,10 @@ public class MenuPane extends Component {
 		depthButton = new Button(){
 			@Override
 			protected String hoverText() {
-				if (Dungeon.level.feeling != Level.Feeling.NONE){
+				//the open world has a place name instead of a floor
+				if (Continent.place() != null){
+					return Messages.titleCase(Continent.place());
+				} else if (Dungeon.level.feeling != Level.Feeling.NONE){
 					return Dungeon.level.feeling.desc();
 				} else {
 					return null;
@@ -107,7 +112,9 @@ public class MenuPane extends Component {
 			protected void onClick() {
 				super.onClick();
 
-				if (Dungeon.level.feeling == Level.Feeling.NONE){
+				if (Continent.place() != null){
+					GameScene.show(new WndWorldMap());
+				} else if (Dungeon.level.feeling == Level.Feeling.NONE){
 					GameScene.show(new WndJournal());
 				} else {
 					GameScene.show(new WndTitledMessage(Icons.getLarge(Dungeon.level.feeling),

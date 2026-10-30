@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.levels;
 
+import com.shatteredpixel.shatteredpixeldungeon.rift.RiftBosses;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.CaimanQuest;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
@@ -131,6 +133,8 @@ public class SewerBossLevel extends SewerLevel {
 
 	@Override
 	protected void createMobs() {
+		//the drains of the room, if the old sewer worker got his tooth
+		CaimanQuest.drain(this);
 	}
 	
 	public Actor addRespawner() {
@@ -192,9 +196,13 @@ public class SewerBossLevel extends SewerLevel {
 				}
 			});
 		}
+		//cooperative runs: the arena is closed now, the whole party comes in
+		gatherParty();
 	}
 	
 	public void unseal() {
+		//cooperative runs: not while the boss of the Summoner's Rift still fights (it unseals when it dies)
+		if (RiftBosses.keepSealed(this)) return;
 		if (locked) {
 
 			super.unseal();

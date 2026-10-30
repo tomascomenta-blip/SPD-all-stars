@@ -21,6 +21,8 @@
 
 package com.watabou.noosa;
 
+import com.watabou.utils.Random;
+
 import com.watabou.utils.RectF;
 
 public class MovieClip extends Image {
@@ -71,7 +73,15 @@ public class MovieClip extends Image {
 					}
 					finished = true;
 					if (listener != null) {
-						listener.onComplete( curAnim );
+						//the end of a one-shot animation (attack, zap...) often continues game logic.
+						//Looping animations (idle, run) end at times that differ between screens.
+						boolean gameplay = !curAnim.looped;
+						if (gameplay) Random.beginGameplay();
+						try {
+							listener.onComplete( curAnim );
+						} finally {
+							if (gameplay) Random.endGameplay();
+						}
 						// This check can probably be removed
 						if (curAnim == null) {
 							return;

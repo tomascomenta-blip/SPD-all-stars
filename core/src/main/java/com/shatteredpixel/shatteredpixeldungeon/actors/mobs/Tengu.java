@@ -41,6 +41,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Roots;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Terror;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopRewards;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BlobEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
@@ -81,6 +82,8 @@ import com.watabou.utils.Random;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+
+import java.util.LinkedHashSet;
 
 public class Tengu extends Mob {
 	
@@ -211,9 +214,9 @@ public class Tengu extends Mob {
 	@Override
 	public void die( Object cause ) {
 		
-		if (Dungeon.hero.subClass == HeroSubClass.NONE) {
-			Dungeon.level.drop( new TengusMask(), pos ).sprite.drop();
-		}
+		//cooperative runs: one mask for each hero that still has no subclass
+		CoopRewards.dropAround(
+				CoopRewards.masks(), pos);
 		
 		GameScene.bossSlain();
 		super.die( cause );
@@ -768,7 +771,7 @@ public class Tengu extends Mob {
 		public int direction;
 		private int[] curCells;
 		
-		HashSet<Integer> toCells = new HashSet<>();
+		HashSet<Integer> toCells = new LinkedHashSet<>();
 		
 		@Override
 		public boolean act() {

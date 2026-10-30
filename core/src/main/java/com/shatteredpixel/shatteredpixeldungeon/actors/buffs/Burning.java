@@ -260,10 +260,17 @@ public class Burning extends Buff implements Hero.Doom, Buff.DOTbuff {
 
 	@Override
 	public int totalIncomingDMG() {
-		if (nextHit == 0){
-			nextHit = Random.NormalIntRange( 1, 3 + Dungeon.scalingDepth()/4 );
-		}
 		float avgDmg = 2 + Dungeon.scalingDepth()/8f;
-		return (int)Math.round(nextHit + Math.ceil(left-1)*avgDmg);
+		int hit = nextHit;
+		if (hit == 0){
+			if (Random.inGameplay()) {
+				hit = nextHit = Random.NormalIntRange( 1, 3 + Dungeon.scalingDepth()/4 );
+			} else {
+				//asked by the interface (health bars): estimate without changing the buff,
+				//otherwise each player's screen would change the shared state differently
+				hit = Math.round(avgDmg);
+			}
+		}
+		return (int)Math.round(hit + Math.ceil(left-1)*avgDmg);
 	}
 }

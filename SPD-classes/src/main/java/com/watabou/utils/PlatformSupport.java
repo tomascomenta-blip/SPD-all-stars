@@ -62,6 +62,11 @@ public abstract class PlatformSupport {
 
 	public abstract boolean connectedToUnmeteredNetwork();
 
+	//Android only lets apps receive local network broadcasts while they hold a multicast lock
+	public void setLocalDiscovery( boolean listening ){
+		//nothing needed on most platforms
+	}
+
 	public abstract boolean supportsVibration();
 
 	public void vibrate( int millis ){

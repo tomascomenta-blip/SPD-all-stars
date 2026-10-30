@@ -23,6 +23,7 @@ package com.watabou.utils;
 
 import com.badlogic.gdx.utils.IntMap;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -43,11 +44,20 @@ public class SparseArray<T> extends IntMap<T> {
 		return super.remove(key);
 	}
 	
+	//keys are returned in ascending order, so iteration never depends on the internal table layout
+	//(cooperative runs need the same order on every machine, even after a save is reloaded)
 	public synchronized int[] keyArray() {
-		return keys().toArray().toArray();
+		int[] keys = keys().toArray().toArray();
+		Arrays.sort(keys);
+		return keys;
 	}
 	
 	public synchronized List<T> valueList() {
-		return Arrays.asList(values().toArray().toArray());
+		int[] keys = keyArray();
+		ArrayList<T> result = new ArrayList<>(keys.length);
+		for (int k : keys){
+			result.add(get(k));
+		}
+		return result;
 	}
 }

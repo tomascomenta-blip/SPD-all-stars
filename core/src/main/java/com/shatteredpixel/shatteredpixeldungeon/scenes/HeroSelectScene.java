@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.scenes;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
+import com.shatteredpixel.shatteredpixeldungeon.DevFlags;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.Rankings;
@@ -32,6 +33,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Journal;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.WndSKOptions;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ActionIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.CheckBox;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
@@ -197,6 +199,13 @@ public class HeroSelectScene extends PixelScene {
 			add(button);
 			heroBtns.add(button);
 		}
+		//testing the layout with more heroes than there are: -Dspd.test.extraheroes=N repeats the last classes
+		for (int i = 0; i < DevFlags.extraHeroes(); i++){
+			HeroClass[] all = HeroClass.values();
+			HeroBtn button = new HeroBtn(all[all.length - 1 - (i % all.length)]);
+			add(button);
+			heroBtns.add(button);
+		}
 
 		optionsPane = new GameOptions();
 		optionsPane.visible = optionsPane.active = false;
@@ -261,24 +270,33 @@ public class HeroSelectScene extends PixelScene {
 				btnHeight += 6;
 			}
 
-			int cols = (int)Math.ceil(heroBtns.size()/2f);
-			float curX = insets.left + (leftArea - btnWidth * cols + (cols-1))/2f;
-			float curY = title.bottom() + uiSpacing;
-
-			int count = 0;
-			for (StyledButton button : heroBtns){
-				button.setRect(curX, curY, btnWidth, btnHeight);
-				align(button);
-				curX += btnWidth+1;
-				count++;
-				if (count >= (1+heroBtns.size())/2){
-					curX -= btnWidth*count + count;
-					curY += btnHeight+1;
-					if (heroBtns.size()%2 != 0){
-						curX += btnWidth/2f;
-					}
-					count = 0;
+			//with many heroes (this mod has many more than the original six) the buttons need
+			// several rows, and they shrink a little until the grid leaves room for the texts below it
+			float gridSpace = uiHeight - title.height() - 100;
+			int maxCols, rows;
+			while (true){
+				maxCols = Math.max(1, (int)((leftArea + 1) / (btnWidth + 1)));
+				rows = Math.max(2, (int)Math.ceil(heroBtns.size() / (float)maxCols));
+				if (rows*(btnHeight+1) <= gridSpace) break;
+				if (btnWidth > HeroBtn.MIN_WIDTH - 3){
+					btnWidth -= 3;
+				} else if (btnHeight > HeroBtn.HEIGHT - 6){
+					btnHeight -= 2;
+				} else {
+					break;
 				}
+			}
+			int cols = (int)Math.ceil(heroBtns.size() / (float)rows);
+			float curY = title.bottom() + Math.max(2, uiSpacing - (rows-2)*(btnHeight+1)/2f);
+
+			for (int i = 0; i < heroBtns.size(); i++){
+				StyledButton button = heroBtns.get(i);
+				int r = i / cols;
+				int c = i % cols;
+				int inRow = (r == rows-1) ? heroBtns.size() - cols*(rows-1) : cols;
+				float rowX = insets.left + (leftArea - (btnWidth*inRow + (inRow-1)))/2f;
+				button.setRect(rowX + c*(btnWidth+1), curY + r*(btnHeight+1), btnWidth, btnHeight);
+				align(button);
 			}
 
 			heroName = renderTextBlock(9);
@@ -327,16 +345,26 @@ public class HeroSelectScene extends PixelScene {
 
 			int btnWidth = HeroBtn.MIN_WIDTH;
 
-			float curX = insets.left + (w - btnWidth * heroBtns.size()) / 2f;
-			if (curX > 0) {
-				btnWidth += Math.min(curX / (heroBtns.size() / 2f), 15);
-				curX = insets.left + (w - btnWidth * heroBtns.size()) / 2f;
-			}
-			float curY = insets.top + h - HeroBtn.HEIGHT + 3;
+			//as many rows as needed so that no button is narrower than its minimum
+			// (this mod has many heroes: on a narrow phone that is three rows)
+			int rows = Math.max(1, (int)Math.ceil(HeroBtn.MIN_WIDTH * heroBtns.size() / w));
+			int perRow = (int)Math.ceil(heroBtns.size() / (float)rows);
 
-			for (StyledButton button : heroBtns) {
-				button.setRect(curX, curY, btnWidth, HeroBtn.HEIGHT + insets.bottom);
-				curX += btnWidth;
+			float curX = insets.left + (w - btnWidth * perRow) / 2f;
+			if (curX > 0) {
+				btnWidth += Math.min(curX / (perRow / 2f), 15);
+			}
+			//(the last row used to be cut off at the bottom when there were several rows)
+			float curY = insets.top + h - HeroBtn.HEIGHT*rows + (rows == 1 ? 3 : 0);
+
+			for (int i = 0; i < heroBtns.size(); i++) {
+				StyledButton button = heroBtns.get(i);
+				int r = i / perRow;
+				int c = i % perRow;
+				int inRow = (r == rows-1) ? heroBtns.size() - perRow*(rows-1) : perRow;
+				float rowX = insets.left + (w - btnWidth * inRow) / 2f;
+				float hgt = HeroBtn.HEIGHT + (r == rows-1 ? insets.bottom : 0);
+				button.setRect(rowX + c*btnWidth, curY + r*HeroBtn.HEIGHT, btnWidth, hgt);
 			}
 
 			//add a darkening bar along bottom
@@ -349,9 +377,9 @@ public class HeroSelectScene extends PixelScene {
 				add(blocker);
 			}
 
-			title.setPos(insets.left + (w - title.width()) / 2f, insets.top + (h - HeroBtn.HEIGHT - title.height() - 4));
+			title.setPos(insets.left + (w - title.width()) / 2f, insets.top + (h - HeroBtn.HEIGHT*rows - title.height() - 4));
 
-			btnOptions.setRect(heroBtns.get(0).left() + 16, Camera.main.height-HeroBtn.HEIGHT-16, 20, 21);
+			btnOptions.setRect(heroBtns.get(0).left() + 16, Camera.main.height-HeroBtn.HEIGHT*rows-16, 20, 21);
 			optionsPane.setPos(heroBtns.get(0).left(), 0);
 		}
 
@@ -463,7 +491,8 @@ public class HeroSelectScene extends PixelScene {
 			startBtn.text(Messages.titleCase(cl.title()));
 			startBtn.setSize(startBtn.reqWidth() + 8, 21);
 
-			startBtn.setPos((Camera.main.width - startBtn.width())/2f, (Camera.main.height - insets.bottom - HeroBtn.HEIGHT + 2 - startBtn.height()));
+			//above the first row of hero buttons (there may be two rows)
+			startBtn.setPos((Camera.main.width - startBtn.width())/2f, heroBtns.get(0).top() + 2 - startBtn.height());
 			PixelScene.align(startBtn);
 
 			infoButton.visible = infoButton.active = true;
@@ -820,6 +849,19 @@ public class HeroSelectScene extends PixelScene {
 			challengeButton.icon(Icons.get(SPDSettings.challenges() > 0 ? Icons.CHALLENGE_COLOR : Icons.CHALLENGE_GREY));
 			add(challengeButton);
 			buttons.add(challengeButton);
+
+			//alt worlds: difficulty and chance of the new worlds
+			StyledButton skButton = new StyledButton(Chrome.Type.BLANK,
+					Messages.get(WndSKOptions.class, "button"), 6){
+				@Override
+				protected void onClick() {
+					ShatteredPixelDungeon.scene().addToFront(new WndSKOptions());
+				}
+			};
+			skButton.leftJustify = true;
+			skButton.icon(Icons.get(Icons.PREFS));
+			add(skButton);
+			buttons.add(skButton);
 
 			int unlockedCount = 0;
 			for (HeroClass cls : HeroClass.values()){

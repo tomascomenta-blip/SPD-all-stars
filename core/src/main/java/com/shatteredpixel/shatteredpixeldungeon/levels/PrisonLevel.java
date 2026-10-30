@@ -82,13 +82,22 @@ public class PrisonLevel extends RegularLevel {
 
 	@Override
 	protected ArrayList<Room> initRooms() {
-		return Wandmaker.Quest.spawnRoom(super.initRooms());
+		return questRooms(super.initRooms());
+	}
+
+	//the room of the wandmaker's quest (the kingdom puts its own instead)
+	protected ArrayList<Room> questRooms( ArrayList<Room> rooms ){
+		return Wandmaker.Quest.spawnRoom(rooms);
 	}
 
 	@Override
 	protected void createMobs() {
-		Wandmaker.Quest.spawnWandmaker(this, roomEntrance);
+		placeQuests();
 		super.createMobs();
+	}
+
+	protected void placeQuests() {
+		Wandmaker.Quest.spawnWandmaker(this, roomEntrance);
 	}
 
 	@Override

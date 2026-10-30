@@ -61,6 +61,7 @@ import com.watabou.utils.Random;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 abstract public class MissileWeapon extends Weapon {
 
@@ -452,7 +453,7 @@ abstract public class MissileWeapon extends Weapon {
 	protected boolean useRoundingInDurabilityCalc = true;
 
 	public float durabilityPerUse( int level ){
-		float usages = baseUses * (float)(Math.pow(1.5f, level));
+		float usages = baseUses * (float)(StrictMath.pow(1.5f, level));
 
 		//+50%/75% durability
 		if (Dungeon.hero != null && Dungeon.hero.hasTalent(Talent.DURABLE_PROJECTILES)){
@@ -819,8 +820,8 @@ abstract public class MissileWeapon extends Weapon {
 			revivePersists = true;
 		}
 
-		public HashMap<Long, Integer> levelThresholds = new HashMap<>();
-		public HashMap<Long, Class<? extends Enchantment>> appliedEnchants = new HashMap<>();
+		public HashMap<Long, Integer> levelThresholds = new LinkedHashMap<>();
+		public HashMap<Long, Class<? extends Enchantment>> appliedEnchants = new LinkedHashMap<>();
 
 		public static boolean pickupValid(Hero h, MissileWeapon w){
 			if (h.buff(UpgradedSetTracker.class) != null){
@@ -889,7 +890,7 @@ abstract public class MissileWeapon extends Weapon {
 
 			// pre-v4.0.0 saves
 			if (!bundle.contains(SET_IDS_ENCHANTS)){
-				appliedEnchants = new HashMap<>();
+				appliedEnchants = new LinkedHashMap<>();
 			} else {
 				IDs = bundle.getLongArray(SET_IDS_ENCHANTS);
 				Class[] enchants = bundle.getClassArray(SET_ENCHANTS);

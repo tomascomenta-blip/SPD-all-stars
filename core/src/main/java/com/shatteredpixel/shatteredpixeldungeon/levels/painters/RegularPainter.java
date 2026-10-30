@@ -44,6 +44,7 @@ import com.watabou.utils.Reflection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public abstract class RegularPainter extends Painter {
 	
@@ -200,7 +201,7 @@ public abstract class RegularPainter extends Painter {
 
 		float hiddenDoorChance = hiddenDoorChance(l);
 
-		HashMap<Room, Room> roomMerges = new HashMap<>();
+		HashMap<Room, Room> roomMerges = new LinkedHashMap<>();
 
 		for (Room r : rooms) {
 			for (Room n : r.connected.keySet()) {

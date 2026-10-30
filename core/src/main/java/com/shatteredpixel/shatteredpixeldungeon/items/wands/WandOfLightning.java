@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.wands;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopRules;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -71,7 +72,7 @@ public class WandOfLightning extends DamageWand {
 	public void onZap(Ballistica bolt) {
 
 		for (Char ch : affected.toArray(new Char[0])){
-			if (ch != curUser && ch.alignment == curUser.alignment && ch.pos != bolt.collisionPos){
+			if (ch != curUser && ch.alignment == curUser.alignment && !CoopRules.friendlyTarget(curUser, ch) && ch.pos != bolt.collisionPos){
 				affected.remove(ch);
 			} else if (ch.buff(LightningCharge.class) != null){
 				affected.remove(ch);

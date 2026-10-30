@@ -67,6 +67,12 @@ public class KingsCrown extends Item {
 
 		if (action.equals(AC_WEAR)) {
 
+			//cooperative runs bring one crown per hero: a hero who already chose keeps it for the others
+			if (hero.armorAbility != null){
+				GLog.w(Messages.get(this, "already"));
+				return;
+			}
+
 			curUser = hero;
 			if (hero.belongings.armor() != null){
 				GameScene.show( new WndChooseAbility(this, hero.belongings.armor(), hero));

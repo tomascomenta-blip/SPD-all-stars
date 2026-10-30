@@ -34,6 +34,7 @@ public class Assets {
 	public static class Environment {
 		public static final String TERRAIN_FEATURES = "environment/terrain_features.png";
 		public static final String RAISED_TERRAIN = "environment/raised_terrain.png";
+		public static final String IRON_REALM = "environment/iron_realm.png"; //mordekaiser
 
 		public static final String VISUAL_GRID          = "environment/visual_grid.png";
 		public static final String WALL_BLOCKING        = "environment/wall_blocking.png";
@@ -102,6 +103,8 @@ public class Assets {
 		public static final String RADIAL_MENU      = "interfaces/radial_menu.png";
 
 		public static final String CHANGE_ICONS    = "interfaces/change_icons.png";
+
+		public static final String GAME_ICON       = "interfaces/game_icon.png";
 	}
 
 	//these points to resource bundles, not raw asset files
@@ -115,6 +118,17 @@ public class Assets {
 		public static final String SCENES   = "messages/scenes/scenes";
 		public static final String UI       = "messages/ui/ui";
 		public static final String WINDOWS  = "messages/windows/windows";
+		public static final String CHAMPIONS = "messages/champions/champions";
+		public static final String GRAVEDIGGER = "messages/champions/gravedigger";
+		public static final String GUARDIAN  = "messages/champions/guardian";
+		public static final String BARD      = "messages/champions/bard";
+		public static final String BOTANIST  = "messages/champions/botanist";
+		public static final String FORGER    = "messages/champions/forger"; //ornn
+		public static final String IRONLORD  = "messages/champions/ironlord"; //mordekaiser
+		public static final String RIFT      = "messages/rift/rift";
+		public static final String RIFT_DRAKES = "messages/rift/drakes";
+		public static final String RIFT_HERALD = "messages/rift/herald";
+		public static final String RIFT_ELDER  = "messages/rift/elder";
 	}
 
 	public static class Music {
@@ -250,6 +264,17 @@ public class Assets {
 		public static final String HUNTRESS = "splashes/huntress.jpg";
 		public static final String DUELIST  = "splashes/duelist.jpg";
 		public static final String CLERIC   = "splashes/cleric.jpg";
+		public static final String EXECUTIONER = "splashes/executioner.jpg";
+		public static final String SCOUT       = "splashes/scout.jpg";
+		public static final String PYROMANCER  = "splashes/pyromancer.jpg";
+		public static final String JAILER      = "splashes/jailer.jpg";
+		public static final String BRAWLER     = "splashes/brawler.jpg";
+		public static final String GRAVEDIGGER = "splashes/gravedigger.jpg";
+		public static final String GUARDIAN    = "splashes/guardian.jpg";
+		public static final String BARD        = "splashes/bard.jpg";
+		public static final String BOTANIST    = "splashes/botanist.jpg";
+		public static final String FORGER      = "splashes/forger.jpg"; //ornn
+		public static final String IRONLORD    = "splashes/ironlord.jpg"; //mordekaiser
 
 		public static final String SEWERS   = "splashes/sewers.jpg";
 		public static final String PRISON   = "splashes/prison.jpg";
@@ -275,6 +300,28 @@ public class Assets {
 		public static final String HUNTRESS = "sprites/huntress.png";
 		public static final String DUELIST  = "sprites/duelist.png";
 		public static final String CLERIC   = "sprites/cleric.png";
+		public static final String EXECUTIONER = "sprites/executioner.png";
+		public static final String SCOUT       = "sprites/scout.png";
+		public static final String PYROMANCER  = "sprites/pyromancer.png";
+		public static final String JAILER      = "sprites/jailer.png";
+		public static final String BRAWLER     = "sprites/brawler.png";
+		public static final String EMBER_BEAR  = "sprites/ember_bear.png";
+		public static final String GRAVEDIGGER = "sprites/gravedigger.png";
+		public static final String SAND_GUARDIAN = "sprites/sand_guardian.png"; //Guardian hero class (the mob sheet is GUARDIAN)
+		public static final String BARD        = "sprites/bard.png";
+		public static final String BOTANIST    = "sprites/botanist.png";
+		public static final String SPROUT      = "sprites/sprout.png";
+		public static final String ANCIENT_TREE = "sprites/ancient_tree.png";
+		public static final String FORGER      = "sprites/forger.png"; //ornn
+		public static final String IRONLORD    = "sprites/ironlord.png"; //mordekaiser
+		public static final String MIST_WALKER = "sprites/mist_walker.png";
+		public static final String MIST_MAIDEN = "sprites/mist_maiden.png";
+		//Summoner's Rift bosses of cooperative runs
+		public static final String RIFT_DRAKE  = "sprites/rift_drake.png";
+		public static final String RIFT_HERALD = "sprites/rift_herald.png";
+		public static final String ATAKHAN     = "sprites/atakhan.png";
+		public static final String ELDER_DRAGON= "sprites/elder_dragon.png";
+		public static final String BARON       = "sprites/baron_nashor.png";
 		public static final String AVATARS  = "sprites/avatars.png";
 		public static final String PET      = "sprites/pet.png";
 		public static final String AMULET   = "sprites/amulet.png";

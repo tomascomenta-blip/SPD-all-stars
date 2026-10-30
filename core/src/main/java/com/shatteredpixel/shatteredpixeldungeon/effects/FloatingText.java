@@ -334,13 +334,13 @@ public class FloatingText extends RenderedTextBlock {
 
 		KindOfWeapon wep = null;
 		if (attacker instanceof Hero) wep = ((Hero) attacker).belongings.attackingWeapon();
-		if (attacker instanceof MirrorImage) wep = Dungeon.hero.belongings.weapon();
+		if (attacker instanceof MirrorImage) wep = Dungeon.local().belongings.weapon();
 		if (attacker instanceof Statue) wep = ((Statue)attacker).weapon();
 		if (attacker instanceof DriedRose.GhostHero) wep = ((DriedRose.GhostHero)attacker).weapon();
 
 		Armor arm = null;
 		if (defender instanceof Hero) arm = ((Hero) defender).belongings.armor();
-		if (defender instanceof PrismaticImage) arm = Dungeon.hero.belongings.armor();
+		if (defender instanceof PrismaticImage) arm = Dungeon.local().belongings.armor();
 		if (defender instanceof ArmoredStatue) arm = ((ArmoredStatue)defender).armor();
 		if (defender instanceof DriedRose.GhostHero) arm = ((DriedRose.GhostHero)defender).armor();
 
@@ -359,21 +359,21 @@ public class FloatingText extends RenderedTextBlock {
 			blessBoost *= attacker.buff(ChampionEnemy.class).evasionAndAccuracyFactor();
 		}
 		if (attacker.buff(Bless.class) != null) blessBoost *= 1.25f;
-		if (Dungeon.hero.heroClass != HeroClass.CLERIC
-				&& Dungeon.hero.hasTalent(Talent.BLESS)
+		if (Dungeon.local().heroClass != HeroClass.CLERIC
+				&& Dungeon.local().hasTalent(Talent.BLESS)
 				&& attacker.alignment == Char.Alignment.ALLY){
 			// + 3%/5%
-			blessBoost *= 1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS);
+			blessBoost *= 1.01f + 0.02f*Dungeon.local().pointsInTalent(Talent.BLESS);
 		}
 		if (blessBoost > 1f) hitReasons.put(HIT_BLS, blessBoost);
 		if (RingOfAccuracy.accuracyMultiplier(attacker) > 1)    hitReasons.put(HIT_ACC, RingOfAccuracy.accuracyMultiplier(attacker));
 		if (attacker.buff(Scimitar.SwordDance.class) != null)   hitReasons.put(HIT_DANCE, 1.5f);
 		if (!(wep instanceof MissileWeapon)) {
 			if (attacker instanceof Hero && ((Hero) attacker).hasTalent(Talent.PRECISE_ASSAULT) && ((Hero) attacker).heroClass != HeroClass.DUELIST){
-				hitReasons.put(HIT_PRES, 0.1f * Dungeon.hero.pointsInTalent(Talent.PRECISE_ASSAULT));
+				hitReasons.put(HIT_PRES, 0.1f * Dungeon.local().pointsInTalent(Talent.PRECISE_ASSAULT));
 			}
 			if (attacker.buff(Talent.PreciseAssaultTracker.class) != null){
-				hitReasons.put(HIT_PRES, Dungeon.hero.pointsInTalent(Talent.PRECISE_ASSAULT) == 2 ? 5f : 2f);
+				hitReasons.put(HIT_PRES, Dungeon.local().pointsInTalent(Talent.PRECISE_ASSAULT) == 2 ? 5f : 2f);
 			} else if (attacker.buff(Talent.LiquidAgilACCTracker.class) != null) {
 				hitReasons.put(HIT_LIQ, 3f);
 			}
@@ -436,13 +436,13 @@ public class FloatingText extends RenderedTextBlock {
 
 		KindOfWeapon wep = null;
 		if (attacker instanceof Hero) wep = ((Hero) attacker).belongings.attackingWeapon();
-		if (attacker instanceof MirrorImage) wep = Dungeon.hero.belongings.weapon();
+		if (attacker instanceof MirrorImage) wep = Dungeon.local().belongings.weapon();
 		if (attacker instanceof Statue) wep = ((Statue)attacker).weapon();
 		if (attacker instanceof DriedRose.GhostHero) wep = ((DriedRose.GhostHero)attacker).weapon();
 
 		Armor arm = null;
 		if (defender instanceof Hero) arm = ((Hero) defender).belongings.armor();
-		if (defender instanceof PrismaticImage) arm = Dungeon.hero.belongings.armor();
+		if (defender instanceof PrismaticImage) arm = Dungeon.local().belongings.armor();
 		if (defender instanceof ArmoredStatue) arm = ((ArmoredStatue)defender).armor();
 		if (defender instanceof DriedRose.GhostHero) arm = ((DriedRose.GhostHero)defender).armor();
 
@@ -453,11 +453,11 @@ public class FloatingText extends RenderedTextBlock {
 			blessBoost *= defender.buff(ChampionEnemy.class).evasionAndAccuracyFactor();
 		}
 		if (defender.buff(Bless.class) != null) blessBoost *= 1.25f;
-		if (Dungeon.hero.heroClass != HeroClass.CLERIC
-				&& Dungeon.hero.hasTalent(Talent.BLESS)
+		if (Dungeon.local().heroClass != HeroClass.CLERIC
+				&& Dungeon.local().hasTalent(Talent.BLESS)
 				&& defender.alignment == Char.Alignment.ALLY){
 			// + 3%/5%
-			blessBoost *= 1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS);
+			blessBoost *= 1.01f + 0.02f*Dungeon.local().pointsInTalent(Talent.BLESS);
 		}
 		if (blessBoost > 1f)                                    missReasons.put(MISS_BLS, blessBoost);
 		if (FerretTuft.evasionMultiplier() > 1)                 missReasons.put(MISS_TUFT, FerretTuft.evasionMultiplier());

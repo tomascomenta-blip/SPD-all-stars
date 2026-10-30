@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopAlchemy;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -133,28 +134,45 @@ public class WndEnergizeItem extends WndInfoItem {
 
 	public static void energizeAll(Item item ) {
 
-		if (item.isEquipped( Dungeon.hero ) && !((EquipableItem)item).doUnequip( Dungeon.hero, false )) {
+		if (CoopAlchemy.active()){
+			Item done = CoopAlchemy.localEnergize(item, false);
+			if (done != null) energize(done, false);
 			return;
 		}
-		item.detachAll( Dungeon.hero.belongings.backpack );
+
+		if (item.isEquipped( Dungeon.local() ) && !((EquipableItem)item).doUnequip( Dungeon.local(), false )) {
+			return;
+		}
+		item.detachAll( Dungeon.local().belongings.backpack );
 		energize(item);
 	}
 
 	public static void energizeOne( Item item ) {
 
+		if (CoopAlchemy.active()){
+			Item done = CoopAlchemy.localEnergize(item, true);
+			if (done != null) energize(done, false);
+			return;
+		}
+
 		if (item.quantity() <= 1) {
 			energizeAll( item );
 		} else {
-			energize(item.detach( Dungeon.hero.belongings.backpack ));
+			energize(item.detach( Dungeon.local().belongings.backpack ));
 		}
 	}
 
 	private static void energize(Item item){
-		Hero hero = Dungeon.hero;
+		energize(item, true);
+	}
+
+	//addEnergy is false when a cooperative order already added it
+	private static void energize(Item item, boolean addEnergy){
+		Hero hero = Dungeon.local();
 
 		if (ShatteredPixelDungeon.scene() instanceof AlchemyScene){
 
-			Dungeon.energy += item.energyVal();
+			if (addEnergy) Dungeon.energy += item.energyVal();
 			((AlchemyScene) ShatteredPixelDungeon.scene()).createEnergy();
 			if (!item.isIdentified()){
 				((AlchemyScene) ShatteredPixelDungeon.scene()).showIdentify(item);

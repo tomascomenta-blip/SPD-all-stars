@@ -41,11 +41,22 @@ import com.watabou.utils.Point;
 
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Locale;
 
 public class DesktopLauncher {
+
+	private static final String OLD_TITLE = "SPD Cooperativo";
+
+	//moves a whole save folder, only when the new one isn't there yet
+	public static boolean moveOldSaves( File from, File to ){
+		if (from.equals(to) || !from.isDirectory() || to.exists()) return false;
+		File parent = to.getParentFile();
+		if (parent != null) parent.mkdirs();
+		return from.renameTo(to);
+	}
 
 	public static void main (String[] args) {
 
@@ -135,7 +146,9 @@ public class DesktopLauncher {
 		
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
 		
-		config.setTitle( title );
+		//cooperative testing: several copies on one computer need separate saves (-Dspd.profile=B)
+		final String profile = System.getProperty("spd.profile");
+		config.setTitle( profile == null ? title : title + " [" + profile + "]" );
 
 		//if I were implementing this from scratch I would use the full implementation title for saves
 		// (e.g. /.shatteredpixel/shatteredpixeldungeon), but we have too much existing save
@@ -168,15 +181,38 @@ public class DesktopLauncher {
 			baseFileType = Files.FileType.Absolute;
 		}
 
+		//the first releases were called "SPD Cooperativo": their saves move to the new folder
+		if (baseFileType != null){
+			String oldPath = SharedLibraryLoader.os == Os.Linux
+					? basePath.replace("/" + title.toLowerCase(Locale.ROOT).replace(" ", "-") + "/", "/" + OLD_TITLE.toLowerCase(Locale.ROOT).replace(" ", "-") + "/")
+					: basePath.replace("/" + title + "/", "/" + OLD_TITLE + "/");
+			String home = baseFileType == Files.FileType.External ? System.getProperty("user.home") + "/" : "";
+			moveOldSaves(new File(home + oldPath), new File(home + basePath));
+		}
+
+		if (profile != null && !profile.isEmpty()){
+			basePath += "profile-" + profile + "/";
+		}
+
 		config.setPreferencesConfig( basePath, baseFileType );
 		SPDSettings.set( new Lwjgl3Preferences( new Lwjgl3FileHandle(basePath + SPDSettings.DEFAULT_PREFS_FILE, baseFileType) ));
 		FileUtils.setDefaultFileProperties( baseFileType, basePath );
 		
+		//testing several copies on one computer: they can't all open the sound device
+		if (System.getProperty("spd.noaudio") != null){
+			config.disableAudio(true);
+		}
+
 		config.setWindowSizeLimits( 720, 400, -1, -1 );
 		Point p = SPDSettings.windowResolution();
 		config.setWindowedMode( p.x, p.y );
 
 		config.setMaximized(SPDSettings.windowMaximized());
+
+		//cooperative runs: the game goes on while the window is minimized or in the background
+		//(an AFK hero keeps resting, and a host keeps the run going for the others)
+		config.setPauseWhenMinimized(false);
+		config.setPauseWhenLostFocus(false);
 
 		//going fullscreen on launch is a bit buggy
 		// so game always starts windowed and then switches in DesktopPlatformSupport.updateSystemUI

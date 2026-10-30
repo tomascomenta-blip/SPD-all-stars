@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopOrders;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -57,7 +58,7 @@ public class RightClickMenu extends Component {
 	private Point childOffset;
 
 	public RightClickMenu(Item item){
-		ArrayList<String> actions = item.actions(Dungeon.hero);
+		ArrayList<String> actions = item.actions(Dungeon.local());
 		if (actions.remove(item.defaultAction())) {
 			actions.add(0, item.defaultAction());
 		}
@@ -101,7 +102,7 @@ public class RightClickMenu extends Component {
 		blocker.target = bg;
 		add(blocker);
 
-		if (item != null && Dungeon.hero.belongings.contains(item)){
+		if (item != null && Dungeon.local().belongings.contains(item)){
 			topRightButton = new ItemJournalButton(item, null){
 				@Override
 				protected void onClick() {
@@ -126,7 +127,7 @@ public class RightClickMenu extends Component {
 						GameScene.nextWndOffset(childOffset);
 					}
 					if (item != null){
-						item.execute(Dungeon.hero, options[finalI]);
+						CoopOrders.execute(item, options[finalI]);
 
 						if (options[finalI].equals(item.defaultAction()) && item.usesTargeting){
 							InventoryPane.useTargeting();
@@ -141,7 +142,7 @@ public class RightClickMenu extends Component {
 				if (options[i].equals(item.defaultAction())) {
 					buttons[i].textColor(Window.TITLE_COLOR);
 				}
-				buttons[i].text(item.actionName(options[i], Dungeon.hero));
+				buttons[i].text(item.actionName(options[i], Dungeon.local()));
 			}
 			add(buttons[i]);
 		}

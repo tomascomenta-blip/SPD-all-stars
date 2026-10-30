@@ -167,16 +167,25 @@ public class BossHealthBar extends Component {
 		int paneSize = large ? 30 : 16;
 
 		if (skull.height() > 24 || skull.width() > 24){
-			skull.scale.set(skull.scale.x * PixelScene.align(24f/Math.max(skull.width(), skull.height())));
+			//pixel alignment rounds the scale of a really big sprite down to nothing
+			float s = 24f/Math.max(skull.width(), skull.height());
+			skull.scale.set(skull.scale.x * (PixelScene.align(s) > 0 ? PixelScene.align(s) : s));
 		}
 
 		skull.x = bar.x + (paneSize - skull.width())/2f;
 		skull.y = bar.y + (paneSize - skull.height())/2f;
 	}
 
+	//a boss with its own bar (Tharog) hides this one
+	public static boolean hidden = false;
+
 	@Override
 	public void update() {
 		super.update();
+		if (hidden){
+			visible = active = false;
+			return;
+		}
 		if (boss != null){
 			if (!boss.isAlive() || !Dungeon.level.mobs.contains(boss)){
 				boss = null;

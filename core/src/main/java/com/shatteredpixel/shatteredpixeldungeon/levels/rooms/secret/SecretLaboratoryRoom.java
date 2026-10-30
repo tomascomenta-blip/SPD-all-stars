@@ -46,10 +46,11 @@ import com.watabou.utils.Random;
 import com.watabou.utils.Reflection;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class SecretLaboratoryRoom extends SecretRoom {
 	
-	private static HashMap<Class<? extends Potion>, Float> potionChances = new HashMap<>();
+	private static HashMap<Class<? extends Potion>, Float> potionChances = new LinkedHashMap<>();
 	static{
 		potionChances.put(PotionOfHealing.class,        1f);
 		potionChances.put(PotionOfMindVision.class,     2f);
@@ -88,7 +89,7 @@ public class SecretLaboratoryRoom extends SecretRoom {
 		level.drop( new EnergyCrystal().quantity(Random.IntRange(3, 5)), pos );
 
 		int n = Random.IntRange( 2, 3 );
-		HashMap<Class<? extends Potion>, Float> chances = new HashMap<>(potionChances);
+		HashMap<Class<? extends Potion>, Float> chances = new LinkedHashMap<>(potionChances);
 		for (int i=0; i < n; i++) {
 			do {
 				pos = level.pointToCell(random());

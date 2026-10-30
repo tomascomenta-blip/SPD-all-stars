@@ -52,6 +52,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.starship.Hive;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.BArray;
 import com.watabou.utils.Bundle;
@@ -136,6 +137,8 @@ public class Bomb extends Item {
 	}
 
 	public void explode(int cell){
+		//the blast burns the biomass of the varkolyn hive
+		Hive.burnAround(cell, 1);
 		//We're blowing up, so no need for a fuse anymore.
 		if (fuse != null) {
 			fuse.snuff();
@@ -371,7 +374,7 @@ public class Bomb extends Item {
 			validIngredients.put(MetalShard.class,              ShrapnelBomb.class);
 		}
 		
-		private static final HashMap<Class<?extends Bomb>, Integer> bombCosts = new HashMap<>();
+		private static final HashMap<Class<?extends Bomb>, Integer> bombCosts = new LinkedHashMap<>();
 		static {
 			bombCosts.put(FrostBomb.class,      0);
 			bombCosts.put(WoollyBomb.class,     0);

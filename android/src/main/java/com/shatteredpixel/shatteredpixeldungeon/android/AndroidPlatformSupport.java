@@ -46,6 +46,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AndroidPlatformSupport extends PlatformSupport {
+
+	private android.net.wifi.WifiManager.MulticastLock multicastLock;
+
+	@Override
+	public void setLocalDiscovery( boolean listening ) {
+		try {
+			if (listening) {
+				if (multicastLock == null) {
+					android.net.wifi.WifiManager wifi = (android.net.wifi.WifiManager) AndroidLauncher.instance
+							.getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
+					multicastLock = wifi.createMulticastLock("spdcoop");
+					multicastLock.setReferenceCounted(false);
+				}
+				multicastLock.acquire();
+			} else if (multicastLock != null && multicastLock.isHeld()) {
+				multicastLock.release();
+			}
+		} catch (Exception e) {
+			//discovery just won't find anything, joining by address still works
+		}
+	}
 	
 	public void updateDisplaySize(){
 		AndroidLauncher.instance.setRequestedOrientation( SPDSettings.landscape() ?

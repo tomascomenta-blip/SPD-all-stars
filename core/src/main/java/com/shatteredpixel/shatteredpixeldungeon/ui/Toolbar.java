@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopOrders;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.QuickSlot;
@@ -119,7 +120,7 @@ public class Toolbar extends Component {
 					return;
 				}
 
-				if (Dungeon.hero != null && Dungeon.hero.ready && !GameScene.cancel()) {
+				if (Dungeon.local() != null && Dungeon.local().ready && !GameScene.cancel()) {
 
 					String[] slotNames = new String[6];
 					Image[] slotIcons = new Image[6];
@@ -127,7 +128,7 @@ public class Toolbar extends Component {
 						Item item = Dungeon.quickslot.getItem(i);
 
 						if (item != null && !Dungeon.quickslot.isPlaceholder(i) &&
-								(!Dungeon.hero.belongings.lostInventory() || item.keptThroughLostInventory())){
+								(!Dungeon.local().belongings.lostInventory() || item.keptThroughLostInventory())){
 							slotNames[i] = Messages.titleCase(item.name());
 							slotIcons[i] = new ItemSprite(item);
 						} else {
@@ -153,7 +154,7 @@ public class Toolbar extends Component {
 							Item item = Dungeon.quickslot.getItem(idx);
 
 							if (item == null || Dungeon.quickslot.isPlaceholder(idx)
-									|| (Dungeon.hero.belongings.lostInventory() && !item.keptThroughLostInventory())
+									|| (Dungeon.local().belongings.lostInventory() && !item.keptThroughLostInventory())
 									|| alt){
 								//TODO would be nice to use a radial menu for this too
 								// Also a bunch of code could be moved out of here into subclasses of RadialMenu
@@ -177,7 +178,7 @@ public class Toolbar extends Component {
 								});
 							} else {
 
-								item.execute(Dungeon.hero);
+								CoopOrders.execute(item, null);
 								if (item.usesTargeting) {
 									QuickSlotButton.useTargeting(idx);
 								}
@@ -198,9 +199,9 @@ public class Toolbar extends Component {
 		add(btnWait = new Tool(24, 0, 20, 26) {
 			@Override
 			protected void onClick() {
-				if (Dungeon.hero != null &&  Dungeon.hero.ready && !GameScene.cancel()) {
+				if (Dungeon.local() != null &&  Dungeon.local().ready && !GameScene.cancel()) {
 					examining = false;
-					Dungeon.hero.rest(false);
+					CoopOrders.named("rest");
 				}
 			}
 			
@@ -220,9 +221,9 @@ public class Toolbar extends Component {
 			}
 
 			protected boolean onLongClick() {
-				if (Dungeon.hero != null && Dungeon.hero.ready && !GameScene.cancel()) {
+				if (Dungeon.local() != null && Dungeon.local().ready && !GameScene.cancel()) {
 					examining = false;
-					Dungeon.hero.rest(true);
+					CoopOrders.named("restFull");
 				}
 				return true;
 			}
@@ -233,9 +234,9 @@ public class Toolbar extends Component {
 		add(new Button(){
 			@Override
 			protected void onClick() {
-				if (Dungeon.hero != null && Dungeon.hero.ready && !GameScene.cancel()) {
+				if (Dungeon.local() != null && Dungeon.local().ready && !GameScene.cancel()) {
 					examining = false;
-					Dungeon.hero.rest(true);
+					CoopOrders.named("restFull");
 				}
 			}
 
@@ -250,29 +251,17 @@ public class Toolbar extends Component {
 		add(new Button(){
 			@Override
 			protected void onClick() {
-				if (Dungeon.hero != null && Dungeon.hero.ready && !GameScene.cancel()) {
-					Dungeon.hero.waitOrPickup = true;
-					if ((Dungeon.level.heaps.get(Dungeon.hero.pos) != null || Dungeon.hero.canSelfTrample())
-						&& Dungeon.hero.handle(Dungeon.hero.pos)){
-						//trigger hold fast and patient strike here, even if the hero didn't specifically wait
-						if (Dungeon.hero.hasTalent(Talent.HOLD_FAST)){
-							Buff.affect(Dungeon.hero, HoldFast.class).pos = Dungeon.hero.pos;
-						}
-						if (Dungeon.hero.hasTalent(Talent.PATIENT_STRIKE)){
-							Buff.affect(Dungeon.hero, Talent.PatientStrikeTracker.class).pos = Dungeon.hero.pos;
-						}
-						Dungeon.hero.next();
-					} else {
-						examining = false;
-						Dungeon.hero.rest(false);
-					}
+				if (Dungeon.local() != null && Dungeon.local().ready && !GameScene.cancel()) {
+					//same logic for both players, see CoopOrders.perform
+					examining = false;
+					CoopOrders.named("waitPick");
 				}
 			}
 
 			protected boolean onLongClick() {
-				if (Dungeon.hero != null && Dungeon.hero.ready && !GameScene.cancel()) {
+				if (Dungeon.local() != null && Dungeon.local().ready && !GameScene.cancel()) {
 					examining = false;
-					Dungeon.hero.rest(true);
+					CoopOrders.named("restFull");
 				}
 				return true;
 			}
@@ -287,13 +276,13 @@ public class Toolbar extends Component {
 		add(btnSearch = new Tool(44, 0, 20, 26) {
 			@Override
 			protected void onClick() {
-				if (Dungeon.hero != null && Dungeon.hero.ready) {
+				if (Dungeon.local() != null && Dungeon.local().ready) {
 					if (!examining && !GameScene.cancel()) {
 						GameScene.selectCell(informer);
 						examining = true;
 					} else if (examining) {
 						informer.onSelect(null);
-						Dungeon.hero.search(true);
+						CoopOrders.named("search");
 					}
 				}
 			}
@@ -310,7 +299,7 @@ public class Toolbar extends Component {
 			
 			@Override
 			protected boolean onLongClick() {
-				Dungeon.hero.search(true);
+				CoopOrders.named("search");
 				return true;
 			}
 		});
@@ -323,12 +312,12 @@ public class Toolbar extends Component {
 
 			@Override
 			protected void onClick() {
-				if (Dungeon.hero != null && (Dungeon.hero.ready || !Dungeon.hero.isAlive())) {
+				if (Dungeon.local() != null && (Dungeon.local().ready || !Dungeon.local().isAlive())) {
 					if (SPDSettings.interfaceSize() == 2) {
 						GameScene.toggleInvPane();
 					} else {
 						if (!GameScene.cancel()) {
-							GameScene.show(new WndBag(Dungeon.hero.belongings.backpack));
+							GameScene.show(new WndBag(Dungeon.local().belongings.backpack));
 						}
 					}
 				}
@@ -394,8 +383,8 @@ public class Toolbar extends Component {
 		add(new Button(){
 			@Override
 			protected void onClick() {
-				if (Dungeon.hero != null && Dungeon.hero.ready && !GameScene.cancel()) {
-					ArrayList<Bag> bags = Dungeon.hero.belongings.getBags();
+				if (Dungeon.local() != null && Dungeon.local().ready && !GameScene.cancel()) {
+					ArrayList<Bag> bags = Dungeon.local().belongings.getBags();
 					String[] names = new String[bags.size()];
 					Image[] images = new Image[bags.size()];
 					for (int i = 0; i < bags.size(); i++){
@@ -420,11 +409,11 @@ public class Toolbar extends Component {
 
 							for(Item i : bag.items){
 								if (i instanceof Bag) items.remove(i);
-								if (Dungeon.hero.belongings.lostInventory() && !i.keptThroughLostInventory()) items.remove(i);
+								if (Dungeon.local().belongings.lostInventory() && !i.keptThroughLostInventory()) items.remove(i);
 							}
 
 							if (idx == 0){
-								Belongings b = Dungeon.hero.belongings;
+								Belongings b = Dungeon.local().belongings;
 								if (b.ring() != null) items.add(0, b.ring());
 								if (b.misc() != null) items.add(0, b.misc());
 								if (b.artifact() != null) items.add(0, b.artifact());
@@ -462,7 +451,7 @@ public class Toolbar extends Component {
 									super.onSelect(idx, alt);
 									Item item = items.get(idx);
 									if (alt && item.defaultAction() != null) {
-										item.execute(Dungeon.hero);
+										CoopOrders.execute(item, null);
 									} else {
 										InventoryPane.clearTargetingSlot();
 										Game.scene().addToFront(new WndUseItem(null, item));
@@ -653,8 +642,8 @@ public class Toolbar extends Component {
 	public void update() {
 		super.update();
 		
-		if (lastEnabled != (Dungeon.hero.ready && Dungeon.hero.isAlive())) {
-			lastEnabled = (Dungeon.hero.ready && Dungeon.hero.isAlive());
+		if (lastEnabled != (Dungeon.local().ready && Dungeon.local().isAlive())) {
+			lastEnabled = (Dungeon.local().ready && Dungeon.local().isAlive());
 			
 			for (Gizmo tool : members.toArray(new Gizmo[0])) {
 				if (tool instanceof Tool) {
@@ -663,7 +652,7 @@ public class Toolbar extends Component {
 			}
 		}
 		
-		if (!Dungeon.hero.isAlive()) {
+		if (!Dungeon.local().isAlive()) {
 			btnInventory.enable(true);
 		}
 	}

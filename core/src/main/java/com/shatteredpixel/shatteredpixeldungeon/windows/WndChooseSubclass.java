@@ -69,7 +69,7 @@ public class WndChooseSubclass extends Window {
 						if (index == 0){
 							WndChooseSubclass.this.hide();
 							HeroSubClass cls = Random.oneOf(hero.heroClass.subClasses());
-							tome.choose(cls);
+							tome.choose(cls, hero);
 							GameScene.show(new WndInfoSubclass(hero.heroClass, cls));
 						}
 					}
@@ -111,9 +111,9 @@ public class WndChooseSubclass extends Window {
 						@Override
 						protected void onSelect(int index) {
 							hide();
-							if (index == 0 && WndChooseSubclass.this.parent != null){
+							if (index == 0 && WndChooseSubclass.this.isOpen()){
 								WndChooseSubclass.this.hide();
-								tome.choose( subCls );
+								tome.choose( subCls, hero );
 								Statistics.qualifiedForRandomVictoryBadge = false;
 							}
 						}
@@ -129,7 +129,7 @@ public class WndChooseSubclass extends Window {
 			IconButton clsInfo = new IconButton(Icons.get(Icons.INFO)){
 				@Override
 				protected void onClick() {
-					GameScene.show(new WndInfoSubclass(Dungeon.hero.heroClass, subCls));
+					GameScene.show(new WndInfoSubclass(Dungeon.local().heroClass, subCls));
 				}
 			};
 			clsInfo.setRect(WIDTH-20, btnCls.top() + (btnCls.height()-20)/2, 20, 20);

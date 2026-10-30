@@ -38,6 +38,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.awake.Awakening;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.Camera;
@@ -70,6 +71,7 @@ public class ScrollOfTeleportation extends Scroll {
 	}
 	
 	public static boolean teleportToLocation(Char ch, int pos){
+		if (!Awakening.mayLeap(ch, pos)) return false;
 		PathFinder.buildDistanceMap(pos, BArray.or(Dungeon.level.passable, Dungeon.level.avoid, null));
 		if (PathFinder.distance[ch.pos] == Integer.MAX_VALUE
 				|| (!Dungeon.level.passable[pos] && !Dungeon.level.avoid[pos])
@@ -240,7 +242,8 @@ public class ScrollOfTeleportation extends Scroll {
 		for (int i = 0; i < Dungeon.level.length(); i++){
 			if (PathFinder.distance[i] < Integer.MAX_VALUE
 					&& !Dungeon.level.secret[i]
-					&& Actor.findChar(i) == null){
+					&& Actor.findChar(i) == null
+					&& Awakening.leapCell(ch, i)){
 				if (preferNotSeen && !Dungeon.level.visited[i]){
 					notSeenValid.add(i);
 				} else if (Dungeon.level.heroFOV[i]){
@@ -304,8 +307,13 @@ public class ScrollOfTeleportation extends Scroll {
 			ch.sprite.parent.add( new AlphaTweener( ch.sprite, 1, 0.4f ) );
 		}
 
-		if (Dungeon.level.heroFOV[pos] || ch == Dungeon.hero ) {
+		//cooperative runs: the hero of this device keeps the camera even when the game logic runs for
+		//another hero (a boss bringing the party to its lair, an ambush room...)
+		if (Dungeon.level.heroFOV[pos] || ch == Dungeon.hero || ch == Dungeon.local() ) {
 			ch.sprite.emitter().start(Speck.factory(Speck.LIGHT), 0.2f, 3);
+			if (ch == Dungeon.local() && Camera.main.followTarget() != ch.sprite){
+				Camera.main.panFollow(ch.sprite, 5f);
+			}
 		} else {
 			if (Camera.main.followTarget() == ch.sprite){
 				//clear the follow in this case as the teleport target is going out of vision

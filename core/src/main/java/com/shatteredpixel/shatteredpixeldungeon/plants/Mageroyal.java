@@ -47,7 +47,7 @@ public class Mageroyal extends Plant {
 			if (ch instanceof Hero) {
 				GLog.i( Messages.get(this, "refreshed") );
 
-				if (((Hero) ch).subClass == HeroSubClass.WARDEN){
+				if (warden(ch)){
 					Buff.affect(ch, BlobImmunity.class, BlobImmunity.DURATION/2f);
 				}
 			}

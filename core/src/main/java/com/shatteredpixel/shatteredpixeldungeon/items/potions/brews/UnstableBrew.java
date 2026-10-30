@@ -45,6 +45,7 @@ import com.watabou.utils.Reflection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class UnstableBrew extends Brew {
 
@@ -64,7 +65,7 @@ public class UnstableBrew extends Brew {
 		return AC_CHOOSE;
 	}
 
-	private static HashMap<Class<? extends Potion>, Float> potionChances = new HashMap<>();
+	private static HashMap<Class<? extends Potion>, Float> potionChances = new LinkedHashMap<>();
 	static {
 		potionChances.put(PotionOfHealing.class, 3f);
 		potionChances.put(PotionOfMindVision.class, 2f);

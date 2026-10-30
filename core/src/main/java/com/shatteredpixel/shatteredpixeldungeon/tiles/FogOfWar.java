@@ -24,6 +24,7 @@ package com.shatteredpixel.shatteredpixeldungeon.tiles;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.big.ColossusPresence;
 import com.watabou.gltextures.TextureCache;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.NoosaScript;
@@ -322,7 +323,8 @@ public class FogOfWar extends Image {
 	public void draw() {
 
 		if (!toUpdate.isEmpty()){
-			updateTexture(Dungeon.level.heroFOV, Dungeon.level.visited, Dungeon.level.mapped);
+			//the whole of a big one in sight shows, not only the cells the hero sees
+			updateTexture(ColossusPresence.fogView(Dungeon.level.heroFOV), Dungeon.level.visited, Dungeon.level.mapped);
 		}
 
 		super.draw();

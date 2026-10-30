@@ -38,6 +38,9 @@ import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.Continent;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.awake.Awakening;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.ThalFinale;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Toolbar;
 import com.shatteredpixel.shatteredpixeldungeon.utils.DungeonSeed;
@@ -231,6 +234,8 @@ public enum Rankings {
 			Statistics.winMultiplier = 1f;
 			if (Statistics.gameWon)         Statistics.winMultiplier += 1f;
 			if (Statistics.ascended)        Statistics.winMultiplier += 0.5f;
+			if (ThalFinale.defeated)        Statistics.winMultiplier += 0.5f;
+			Statistics.winMultiplier += Continent.scoreBonus();
 
 		//pre v1.3.0 runs have different score calculations
 		//only progress and treasure score, and they are each up to 50% bigger
@@ -516,6 +521,8 @@ public enum Rankings {
 
 		public String desc(){
 			if (win){
+				String continent = Awakening.rankingsDesc(cause);
+				if (continent != null) return continent;
 				if (ascending){
 					return Messages.get(this, "ascended");
 				} else {

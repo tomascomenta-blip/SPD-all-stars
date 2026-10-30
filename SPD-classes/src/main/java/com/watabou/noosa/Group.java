@@ -31,6 +31,11 @@ import java.util.Comparator;
 public class Group extends Gizmo {
 
 	protected ArrayList<Gizmo> members;
+
+	//copy of the members list, in order
+	public synchronized ArrayList<Gizmo> membersList(){
+		return members == null ? new ArrayList<Gizmo>() : new ArrayList<>(members);
+	}
 	
 	// Accessing it is a little faster,
 	// than calling members.getSize()
@@ -275,7 +280,7 @@ public class Group extends Gizmo {
 	
 	public synchronized Gizmo random() {
 		if (length > 0) {
-			return members.get( Random.Int(length) );
+			return members.get( Random.Visual.Int(length) );
 		} else {
 			return null;
 		}

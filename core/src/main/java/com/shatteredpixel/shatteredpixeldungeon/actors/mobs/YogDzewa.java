@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.SealsQuest;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
@@ -63,6 +64,7 @@ import com.watabou.utils.Reflection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class YogDzewa extends Mob {
 
@@ -193,7 +195,7 @@ public class YogDzewa extends Mob {
 			//delay fire on a rooted hero
 			if (!targetedCells.isEmpty() && !Dungeon.hero.rooted) {
 				boolean terrainAffected = false;
-				HashSet<Char> affected = new HashSet<>();
+				HashSet<Char> affected = new LinkedHashSet<>();
 				for (int i : targetedCells) {
 					Ballistica b = new Ballistica(pos, i, Ballistica.WONT_STOP);
 					//shoot beams
@@ -246,7 +248,7 @@ public class YogDzewa extends Mob {
 			if (abilityCooldown <= 0){
 
 				int beams = 1 + (HT - HP)/400;
-				HashSet<Integer> affectedCells = new HashSet<>();
+				HashSet<Integer> affectedCells = new LinkedHashSet<>();
 				for (int i = 0; i < beams; i++){
 
 					int targetPos = Dungeon.hero.pos;
@@ -416,9 +418,11 @@ public class YogDzewa extends Mob {
 			GLog.n(Messages.get(this, "darkness"));
 			sprite.showStatus(CharSprite.POSITIVE, Messages.get(this, "invulnerable"));
 
-			addFist((YogFist)Reflection.newInstance(fistSummons.remove(0)));
+			//the demonic seals: one fist less if they were broken, one more if not
+			if (SealsQuest.skipFist(phase)) fistSummons.remove(0);
+			else addFist((YogFist)Reflection.newInstance(fistSummons.remove(0)));
 
-			if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES)){
+			if (Dungeon.isChallenged(Challenges.STRONGER_BOSSES) || (SealsQuest.extraFist(phase) && !challengeSummons.isEmpty())){
 				addFist((YogFist)Reflection.newInstance(challengeSummons.remove(0)));
 			}
 
@@ -554,6 +558,7 @@ public class YogDzewa extends Mob {
 		if (!BossHealthBar.isAssigned()) {
 			BossHealthBar.assignBoss(this);
 			yell(Messages.get(this, "notice"));
+			SealsQuest.yogFight();
 			for (Char ch : Actor.chars()){
 				if (ch instanceof DriedRose.GhostHero){
 					((DriedRose.GhostHero) ch).sayBoss();

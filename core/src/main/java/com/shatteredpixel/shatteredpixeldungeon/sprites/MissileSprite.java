@@ -38,7 +38,9 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSp
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSpike;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Trident;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKMobSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.utils.Random;
 import com.watabou.noosa.Visual;
 import com.watabou.noosa.tweeners.PosTweener;
 import com.watabou.noosa.tweeners.Tweener;
@@ -103,6 +105,7 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 		ANGULAR_SPEEDS.put(SpiritBow.SpiritArrow.class,       0);
 		ANGULAR_SPEEDS.put(ScorpioSprite.ScorpioShot.class,   0);
 		ANGULAR_SPEEDS.put(HolyLance.HolyLanceVFX.class,      0);
+		ANGULAR_SPEEDS.put(SKMobSprite.Shot.class, 0);
 		
 		//720 is default
 
@@ -110,6 +113,7 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 		
 		ANGULAR_SPEEDS.put(HeavyBoomerang.class,1440);
 		ANGULAR_SPEEDS.put(Bolas.class,         1440);
+		ANGULAR_SPEEDS.put(SKMobSprite.SpinningShot.class, 1440);
 		
 		ANGULAR_SPEEDS.put(Shuriken.class,                  2160);
 		ANGULAR_SPEEDS.put(TenguSprite.TenguShuriken.class, 2160);
@@ -162,8 +166,8 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 		
 		float speed = SPEED;
 		if (item instanceof Dart
-				&& (Dungeon.hero.belongings.weapon() instanceof Crossbow
-				|| Dungeon.hero.belongings.secondWep() instanceof Crossbow)){
+				&& (Dungeon.local().belongings.weapon() instanceof Crossbow
+				|| Dungeon.local().belongings.secondWep() instanceof Crossbow)){
 			speed *= 3f;
 			
 		} else if (item instanceof SpiritBow.SpiritArrow
@@ -181,7 +185,7 @@ public class MissileSprite extends ItemSprite implements Tweener.Listener {
 	public void onComplete( Tweener tweener ) {
 		kill();
 		if (callback != null) {
-			callback.call();
+			Random.gameplay(callback);
 		}
 	}
 }

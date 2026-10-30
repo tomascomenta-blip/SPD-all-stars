@@ -94,6 +94,12 @@ public class VaultMirror extends NPC {
 					reward = new HolyTome().upgrade(8).identify(false);
 					((HolyTome) reward).directCharge(8);
 					break;
+				case EXECUTIONER: case SCOUT: case PYROMANCER: case JAILER: case BRAWLER:
+				case GRAVEDIGGER: case GUARDIAN: case BARD: case BOTANIST: case FORGER: case IRONLORD:
+				case AUTOMATON: case BEASTMASTER: case SPIRITIST: case GUNSLINGER:
+					reward = new MirrorSword().upgrade(3).identify(false);
+					((MeleeWeapon)reward).enchant();
+					break;
 			}
 		Random.popGenerator();
 	}

@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.trinkets;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -128,7 +129,7 @@ public class TrinketCatalyst extends Item {
 
 			ingredients.get(0).quantity(0);
 
-			ShatteredPixelDungeon.scene().addToFront(new WndTrinket(newCata));
+			CoopSession.showPrompt(ShatteredPixelDungeon.scene(), new WndTrinket(newCata));
 			try {
 				Dungeon.saveAll(); //do a save here as pausing alch scene doesn't otherwise save
 			} catch (IOException e) {
@@ -182,7 +183,7 @@ public class TrinketCatalyst extends Item {
 				ItemButton btnReward = new ItemButton() {
 					@Override
 					protected void onClick() {
-						ShatteredPixelDungeon.scene().addToFront(new RewardWindow(item()));
+						CoopSession.showPrompt(ShatteredPixelDungeon.scene(), new RewardWindow(item()));
 					}
 				};
 				btnReward.item(cata.rolledTrinkets.get(i));
@@ -224,6 +225,13 @@ public class TrinketCatalyst extends Item {
 							result.identify();
 							if (ShatteredPixelDungeon.scene() instanceof AlchemyScene) {
 								((AlchemyScene) ShatteredPixelDungeon.scene()).craftItem(null, result);
+							} else if (CoopSession.remoteContext()) {
+								//cooperative runs: the other player picked this in their alchemy screen
+								if (!result.collect()){
+									Dungeon.level.drop(result, Dungeon.hero.pos);
+								}
+								Statistics.itemsCrafted++;
+								Badges.validateItemsCrafted();
 							} else {
 								Sample.INSTANCE.play( Assets.Sounds.PUFF );
 

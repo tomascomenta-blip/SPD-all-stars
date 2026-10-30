@@ -45,6 +45,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.guns.SKGun;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -416,7 +417,8 @@ public class MagesStaff extends MeleeWeapon {
 
 		@Override
 		public boolean itemSelectable(Item item) {
-			return item instanceof Wand;
+			//the guns of the alt worlds charge like wands, but can't be imbued into the staff
+			return item instanceof Wand && !(item instanceof SKGun);
 		}
 
 		@Override
@@ -547,7 +549,7 @@ public class MagesStaff extends MeleeWeapon {
 		}
 
 		public void radiateXY(float amt){
-			float hypot = (float)Math.hypot(speed.x, speed.y);
+			float hypot = (float)StrictMath.hypot(speed.x, speed.y);
 			this.x += speed.x/hypot*amt;
 			this.y += speed.y/hypot*amt;
 		}

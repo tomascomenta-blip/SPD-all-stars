@@ -62,7 +62,8 @@ public class Belongings implements Iterable<Item> {
 					cap++;
 				}
 			}
-			if (Dungeon.hero != null && Dungeon.hero.belongings.secondWep != null){
+			Hero h = owner instanceof Hero ? (Hero) owner : Dungeon.hero;
+			if (h != null && h.belongings.secondWep != null){
 				//secondary weapons still occupy an inv. slot
 				cap--;
 			}

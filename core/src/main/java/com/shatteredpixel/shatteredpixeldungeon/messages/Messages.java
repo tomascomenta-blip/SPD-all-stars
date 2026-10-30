@@ -25,6 +25,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.I18NBundle;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKAssets;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.ContinentAssets;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.awake.Awakening;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.city.cathedral.CathedralAssets;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.events.WorldEvents;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.survival.Survival;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.FinaleAssets;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.QuestAssets;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 
 import java.text.DecimalFormat;
@@ -72,7 +80,39 @@ public class Messages {
 			Assets.Messages.PLANTS,
 			Assets.Messages.SCENES,
 			Assets.Messages.UI,
-			Assets.Messages.WINDOWS
+			Assets.Messages.WINDOWS,
+			Assets.Messages.CHAMPIONS,
+			Assets.Messages.GRAVEDIGGER,
+			Assets.Messages.GUARDIAN,
+			Assets.Messages.BARD,
+			Assets.Messages.BOTANIST,
+			Assets.Messages.FORGER,
+			Assets.Messages.IRONLORD, //mordekaiser
+			Assets.Messages.RIFT,
+			Assets.Messages.RIFT_DRAKES,
+			Assets.Messages.RIFT_HERALD,
+			Assets.Messages.RIFT_ELDER,
+			SKAssets.MESSAGES,
+			SKAssets.MESSAGES_AUTOMATON,
+			SKAssets.MESSAGES_BEASTMASTER,
+			SKAssets.MESSAGES_SPIRITIST,
+			SKAssets.MESSAGES_GUNSLINGER,
+			SKAssets.MESSAGES_FINALE_REWARD,
+			SKAssets.MESSAGES_ECHO,
+			SKAssets.MESSAGES_CONTINENT_MOBS,
+			SKAssets.MESSAGES_PYRE,
+			Awakening.MESSAGES,
+			QuestAssets.MESSAGES,
+			FinaleAssets.MESSAGES,
+			ContinentAssets.MESSAGES,
+			ContinentAssets.MESSAGES_FLESH,
+			ContinentAssets.MESSAGES_CITY,
+			ContinentAssets.MESSAGES_FROST,
+			ContinentAssets.MESSAGES_BONES,
+			ContinentAssets.MESSAGES_ISLES,
+			CathedralAssets.MESSAGES,
+			Survival.MESSAGES,
+			WorldEvents.MESSAGES
 	};
 
 	static{

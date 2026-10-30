@@ -79,6 +79,14 @@ public class Blob extends Actor {
 		}
 	}
 	
+	//the map grew (see Level.appendRows)
+	public void growTo( int length ) {
+		if (cur != null && cur.length < length){
+			cur = java.util.Arrays.copyOf(cur, length);
+			off = java.util.Arrays.copyOf(off, length);
+		}
+	}
+
 	private int[] trim( int start, int end ) {
 		int len = end - start;
 		int[] copy = new int[len];

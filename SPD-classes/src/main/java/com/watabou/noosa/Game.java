@@ -148,6 +148,7 @@ public class Game implements ApplicationListener {
 
 	@Override
 	public void render() {
+		if (renderThread == null) renderThread = Thread.currentThread();
 		//prevents weird rare cases where the app is running twice
 		if (instance != this){
 			finish();
@@ -304,13 +305,23 @@ public class Game implements ApplicationListener {
 	}
 	
 	public static void runOnRenderThread(Callback c){
+		final Callback call = postHook != null ? postHook.wrap(c) : c;
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
-				c.call();
+				call.call();
 			}
 		});
 	}
+
+	//lets cooperative play remember which player a posted callback belongs to
+	public interface PostHook {
+		Callback wrap( Callback c );
+	}
+	public static volatile PostHook postHook = null;
+
+	//the thread that runs update/draw, set on the first frame
+	public static volatile Thread renderThread = null;
 	
 	public static void vibrate( int milliseconds ) {
 		if (platform.supportsVibration()) {

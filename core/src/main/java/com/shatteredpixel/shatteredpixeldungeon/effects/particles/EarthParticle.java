@@ -54,7 +54,7 @@ public class EarthParticle extends PixelParticle {
 		super();
 		
 		color( ColorMath.random( 0x444444, 0x777766 ) );
-		angle = Random.Float( -30, 30 );
+		angle = Random.Visual.Float( -30, 30 );
 	}
 	
 	public void reset( float x, float y ) {
@@ -86,7 +86,7 @@ public class EarthParticle extends PixelParticle {
 
 		acc.y = 30;
 		speed.y = -5;
-		angularSpeed = Random.Float(-90, 90);
+		angularSpeed = Random.Visual.Float(-90, 90);
 	}
 	
 	@Override

@@ -21,10 +21,20 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopStats;
+import com.shatteredpixel.shatteredpixeldungeon.DevFlags;
+import com.shatteredpixel.shatteredpixeldungeon.champions.ChampionHooks;
+import com.shatteredpixel.shatteredpixeldungeon.champions.ironlord.IronlordHooks;
+import com.shatteredpixel.shatteredpixeldungeon.champions.jailer.Soul;
+import com.shatteredpixel.shatteredpixeldungeon.champions.scout.NoxiousShroom;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopLog;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopRules;
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
@@ -163,10 +173,26 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.rift.Atakhan;
+import com.shatteredpixel.shatteredpixeldungeon.rift.BaronCorruption;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.AlchemyScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.WelcomeScene;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.big.Colossus;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.hunt.Climbing;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.hunt.Mutations;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.reward.SpecPowers;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.reward.Specialization;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.Continent;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.DarkTaint;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.survival.SurvivalTest;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.ThalFinale;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.ContinentMobTest;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.echo.EchoTest;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.kingdom.OathShield;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.props.SKStatue;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.undersea.UnderseaFeatures;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ImpSprite;
@@ -179,6 +205,7 @@ import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndTradeItem;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.PriestBracers;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.noosa.tweeners.Delayer;
@@ -203,6 +230,8 @@ public class Hero extends Char {
 	}
 	
 	public static final int MAX_LEVEL = 30;
+	//a hero who beat the end of hours can keep growing up to here
+	public static final int UNBOUND_LEVEL = 40;
 
 	public static final int STARTING_STR = 10;
 	
@@ -213,6 +242,8 @@ public class Hero extends Char {
 	public HeroClass heroClass = HeroClass.ROGUE;
 	public HeroSubClass subClass = HeroSubClass.NONE;
 	public ArmorAbility armorAbility = null;
+	//the path picked with the heart of Thal-Vekhorr, opens the 5th row of talents
+	public Specialization specialization = null;
 	public ArrayList<LinkedHashMap<Talent, Integer>> talents = new ArrayList<>();
 	public LinkedHashMap<Talent, Talent> metamorphedTalents = new LinkedHashMap<>();
 	
@@ -228,6 +259,24 @@ public class Hero extends Char {
 	private Char attackTarget;
 	
 	public boolean resting = false;
+
+	//cooperative runs: this hero has fallen and is spectating until the party reaches a new floor
+	public boolean coopDown = false;
+	//cooperative runs: increases at every turn of the hero, so an animation started in an earlier
+	//turn can tell that the game has moved on (see CharSprite.onComplete)
+	public transient int turnCount = 0;
+	//testing only, see CoopAuto.TestDoom
+	public transient boolean testDoomOnTurn = false;
+
+	//test log of cooperative runs: the cached path, which steers walking
+	public String debugPath(){
+		PathFinder.Path p = path;
+		return p == null ? "-" : p.size() + "@" + (p.isEmpty() ? -1 : p.getFirst());
+	}
+	//cooperative runs: floor (depth + 1000*branch) this hero was last placed on
+	public int coopFloor = -1;
+	//co-op scoreboard (CoopStats), saved with the hero
+	public CoopStats coopStats = new CoopStats();
 	
 	public Belongings belongings;
 	
@@ -237,6 +286,10 @@ public class Hero extends Char {
 	
 	public int lvl = 1;
 	public int exp = 0;
+	//MAX_LEVEL, or UNBOUND_LEVEL once the hero got the loot of Thal-Vekhorr
+	public int lvlCap = MAX_LEVEL;
+	//buffs coming back from a save aren't new afflictions (see SpecPowers.ward)
+	private transient boolean restoring = false;
 	
 	public int HTBoost = 0;
 	
@@ -267,6 +320,9 @@ public class Hero extends Char {
 		if (buff(ElixirOfMight.HTBoost.class) != null){
 			HT += buff(ElixirOfMight.HTBoost.class).boost();
 		}
+		HT += SKStatue.htBonus(this, HT);
+		HT += Mutations.htBonus(this, HT);
+		HT = Math.max(1, Math.round(HT * DarkTaint.htFactor(this)));
 		
 		if (boostHP){
 			HP += Math.max(HT - curHT, 0);
@@ -301,15 +357,22 @@ public class Hero extends Char {
 	private static final String LEVEL		= "lvl";
 	private static final String EXPERIENCE	= "exp";
 	private static final String HTBOOST     = "htboost";
+	private static final String LVL_CAP     = "lvl_cap";
+	private static final String SPEC        = "thal_spec";
 	
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 
 		super.storeInBundle( bundle );
 
+		bundle.put( "coop_down", coopDown );
+		bundle.put( "coop_floor", coopFloor );
+		bundle.put( "coop_stats", coopStats );
+
 		bundle.put( CLASS, heroClass );
 		bundle.put( SUBCLASS, subClass );
 		bundle.put( ABILITY, armorAbility );
+		if (specialization != null) bundle.put( SPEC, specialization );
 		Talent.storeTalentsInBundle( bundle, this );
 		
 		bundle.put( ATTACK, attackSkill );
@@ -321,6 +384,7 @@ public class Hero extends Char {
 		bundle.put( EXPERIENCE, exp );
 		
 		bundle.put( HTBOOST, HTBoost );
+		bundle.put( LVL_CAP, lvlCap );
 
 		belongings.storeInBundle( bundle );
 	}
@@ -332,12 +396,23 @@ public class Hero extends Char {
 		exp = bundle.getInt( EXPERIENCE );
 
 		HTBoost = bundle.getInt(HTBOOST);
+		lvlCap = bundle.contains(LVL_CAP) ? bundle.getInt(LVL_CAP) : MAX_LEVEL;
 
-		super.restoreFromBundle( bundle );
+		restoring = true;
+		try {
+			super.restoreFromBundle( bundle );
+		} finally {
+			restoring = false;
+		}
+
+		coopDown = bundle.getBoolean( "coop_down" );
+		coopFloor = bundle.contains( "coop_floor" ) ? bundle.getInt( "coop_floor" ) : -1;
+		coopStats = bundle.contains( "coop_stats" ) ? (CoopStats) bundle.get( "coop_stats" ) : new CoopStats();
 
 		heroClass = bundle.getEnum( CLASS, HeroClass.class );
 		subClass = bundle.getEnum( SUBCLASS, HeroSubClass.class );
 		armorAbility = (ArmorAbility)bundle.get( ABILITY );
+		specialization = bundle.contains( SPEC ) ? bundle.getEnum( SPEC, Specialization.class ) : null;
 		Talent.restoreTalentsFromBundle( bundle, this );
 		
 		attackSkill = bundle.getInt( ATTACK );
@@ -393,7 +468,8 @@ public class Hero extends Char {
 	public int talentPointsAvailable(int tier){
 		if (lvl < (Talent.tierLevelThresholds[tier] - 1)
 			|| (tier == 3 && subClass == HeroSubClass.NONE)
-			|| (tier == 4 && armorAbility == null)) {
+			|| (tier == 4 && armorAbility == null)
+			|| (tier == 5 && specialization == null)) {
 			return 0;
 		} else if (lvl >= Talent.tierLevelThresholds[tier+1]){
 			return Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier] - talentPointsSpent(tier) + bonusTalentPoints(tier);
@@ -405,7 +481,8 @@ public class Hero extends Char {
 	public int bonusTalentPoints(int tier){
 		if (lvl < (Talent.tierLevelThresholds[tier]-1)
 				|| (tier == 3 && subClass == HeroSubClass.NONE)
-				|| (tier == 4 && armorAbility == null)) {
+				|| (tier == 4 && armorAbility == null)
+				|| (tier == 5 && specialization == null)) {
 			return 0;
 		} else if (buff(PotionOfDivineInspiration.DivineInspirationTracker.class) != null
 					&& buff(PotionOfDivineInspiration.DivineInspirationTracker.class).isBoosted(tier)) {
@@ -455,6 +532,7 @@ public class Hero extends Char {
 		}
 		Buff.affect( this, Regeneration.class );
 		Buff.affect( this, Hunger.class );
+		ChampionHooks.ensurePassives( this );
 	}
 	
 	public int tier() {
@@ -581,6 +659,7 @@ public class Hero extends Char {
 		float evasion = defenseSkill;
 		
 		evasion *= RingOfEvasion.evasionMultiplier( this );
+		evasion *= Mutations.evasion( this );
 
 		if (buff(Talent.LiquidAgilEVATracker.class) != null){
 			if (pointsInTalent(Talent.LIQUID_AGILITY) == 1){
@@ -661,10 +740,17 @@ public class Hero extends Char {
 		if (buff(HoldFast.class) != null){
 			dr += buff(HoldFast.class).armorBonus();
 		}
-		
+
+		dr += ChampionHooks.drBonus(this);
+		//cooperative runs: armor eaten away by Baron Nashor counts against every attacker
+		dr = Math.max(0, dr - BaronCorruption.armorShred(this));
+		//and by Atakhan's 'frail and unworthy'
+		dr = Math.max(0, dr - Atakhan.Fragile.armorIgnored(this));
+		dr += Mutations.armor(this);
+
 		return dr;
 	}
-	
+
 	@Override
 	public int damageRoll() {
 		KindOfWeapon wep = belongings.attackingWeapon();
@@ -690,6 +776,8 @@ public class Hero extends Char {
 			}
 			Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG, 0.75f, 1.2f);
 		}
+
+		dmg = PriestBracers.melee(this, wep, dmg);
 
 		if (heroClass != HeroClass.DUELIST
 				&& hasTalent(Talent.WEAPON_RECHARGING)
@@ -734,6 +822,8 @@ public class Hero extends Char {
 			speed *= (2f + 0.25f*pointsInTalent(Talent.GROWING_POWER));
 		}
 
+		speed *= SpecPowers.speedFactor(this);
+
 		speed = AscensionChallenge.modifyHeroSpeed(speed);
 		
 		return speed;
@@ -758,6 +848,9 @@ public class Hero extends Char {
 
 		//can always attack adjacent enemies
 		if (Dungeon.level.adjacent(pos, enemy.pos)) {
+			return true;
+		}
+		if (enemy instanceof Colossus && (((Colossus) enemy).touches(pos) || Climbing.on(this, (Colossus) enemy))) {
 			return true;
 		}
 
@@ -835,6 +928,28 @@ public class Hero extends Char {
 	
 	@Override
 	public boolean act() {
+
+		//cooperative runs: wait for the other player's decision for their hero (or announce ours)
+		if (CoopSession.holdHeroTurn(this)) {
+			return false;
+		}
+		//cooperative runs: counts the hero's turns (same on every device), see CharSprite.operate
+		turnCount++;
+
+		//testing (-Dspd.test.echo=N): an echo of a world boss comes out next to the party
+		if (TEST_ECHO != null) EchoTest.turn(this, TEST_ECHO);
+		//testing (-Dspd.test.cmob=...): monsters of the dark continent, same idea
+		if (TEST_CMOB != null) ContinentMobTest.turn(this, TEST_CMOB);
+		//testing (-Dspd.test.surv=1, survmeat=1, tether=1): surviving over there
+		if (TEST_SURV) SurvivalTest.turn(this);
+
+		//testing (-Dspd.coop.doom=T:H:self): the hero falls in the middle of its own turn
+		if (testDoomOnTurn){
+			testDoomOnTurn = false;
+			damage(HP + shielding() + 100, new Chasm());
+			spend(TICK);
+			return true;
+		}
 		
 		//calls to dungeon.observe will also update hero's local FOV.
 		fieldOfView = Dungeon.level.heroFOV;
@@ -845,7 +960,7 @@ public class Hero extends Char {
 		
 		if (!ready) {
 			//do a full observe (including fog update) if not resting.
-			if (!resting || buff(MindVision.class) != null || buff(Awareness.class) != null) {
+			if (!resting || Party.active() || buff(MindVision.class) != null || buff(Awareness.class) != null) {
 				Dungeon.observe();
 			} else {
 				//otherwise just directly re-calculate FOV
@@ -864,6 +979,9 @@ public class Hero extends Char {
 			spendAndNext( TICK );
 			return false;
 		}
+
+		//alt worlds: under the mind control of a kraken minion the hero acts on its own
+		UnderseaFeatures.steer(this);
 		
 		boolean actResult;
 		if (curAction == null) {
@@ -942,9 +1060,16 @@ public class Hero extends Char {
 		ready = true;
 		canSelfTrample = true;
 
-		AttackIndicator.updateState();
-		
-		GameScene.ready();
+		//the other player's hero waits for orders from their device, not this interface
+		if (!Party.isLocal(this)) return;
+
+		Random.beginVisual();
+		try {
+			AttackIndicator.updateState();
+			GameScene.ready();
+		} finally {
+			Random.endVisual();
+		}
 		//check statistics to see if vault warned?
 		//or just used shared prefs?
 		if (Dungeon.level instanceof VaultLevel
@@ -1001,14 +1126,22 @@ public class Hero extends Char {
 	}
 
 	private boolean canSelfTrample = false;
+	//testing only (cooperative bots): raises the level without experience or messages
+	public void testLevelUp(){
+		lvl++;
+		attackSkill++;
+		defenseSkill++;
+	}
+
 	public boolean canSelfTrample(){
 		return canSelfTrample && !rooted && !flying &&
 				//standing in high grass
 				(Dungeon.level.map[pos] == Terrain.HIGH_GRASS ||
 				//standing in furrowed grass and not huntress
 				(heroClass != HeroClass.HUNTRESS && Dungeon.level.map[pos] == Terrain.FURROWED_GRASS) ||
-				//standing on a plant
-				Dungeon.level.plants.get(pos) != null);
+				//standing on a plant (the Scout's mushrooms only go off with enemies)
+				(Dungeon.level.plants.get(pos) != null
+						&& !(Dungeon.level.plants.get(pos) instanceof NoxiousShroom)));
 	}
 	
 	private boolean actMove( HeroAction.Move action ) {
@@ -1093,6 +1226,12 @@ public class Hero extends Char {
 				return false;
 			}
 
+			//cooperative runs: only the alchemist's device opens the screen,
+			//the other device replays the alchemy orders (see CoopAlchemy)
+			if (Party.isRemote(this)){
+				return false;
+			}
+
 			AlchemyScene.clearToolkit();
 			ShatteredPixelDungeon.switchScene(AlchemyScene.class);
 			return false;
@@ -1123,6 +1262,7 @@ public class Hero extends Char {
 
 					//TODO this statement is getting silly, might be better to handle this as a propery of items
 					if (item instanceof Dewdrop
+							|| item instanceof Soul
 							|| (item instanceof DwarfToken && Imp.Quest.mirrorUsed)
 							|| item instanceof TimekeepersHourglass.sandBag
 							|| item instanceof DriedRose.Petal
@@ -1165,6 +1305,7 @@ public class Hero extends Char {
 					}
 
 					if (item instanceof Dewdrop
+							|| item instanceof Soul
 							|| item instanceof TimekeepersHourglass.sandBag
 							|| item instanceof DriedRose.Petal
 							|| item instanceof Key) {
@@ -1578,10 +1719,12 @@ public class Hero extends Char {
 			break;
 		default:
 		}
-		
+
+		damage = Mutations.attackProc(this, enemy, damage);
+
 		return damage;
 	}
-	
+
 	@Override
 	public int defenseProc( Char enemy, int damage ) {
 		
@@ -1607,9 +1750,11 @@ public class Hero extends Char {
 		if (rockArmor != null) {
 			damage = rockArmor.absorb(damage);
 		}
-		
+
+		Mutations.defenseProc(this, enemy, damage);
+
 		return super.defenseProc( enemy, damage );
-	}
+}
 
 	@Override
 	public int glyphLevel(Class<? extends Armor.Glyph> cls) {
@@ -1624,8 +1769,15 @@ public class Hero extends Char {
 		}
 	}
 
+	//testing only: -Dspd.test.god=1 heroes take no damage (bots reach the bosses alive)
+	private static final boolean TEST_GOD = DevFlags.god();
+	private static final String TEST_ECHO = DevFlags.echo();
+	private static final String TEST_CMOB = DevFlags.cmob();
+	private static final boolean TEST_SURV = SurvivalTest.on();
+
 	@Override
 	public void damage( int dmg, Object src ) {
+		if (TEST_GOD) return;
 		if (buff(TimekeepersHourglass.timeStasis.class) != null
 				|| buff(TimeStasis.class) != null) {
 			return;
@@ -1644,6 +1796,11 @@ public class Hero extends Char {
 
 		//temporarily assign to a float to avoid rounding a bunch
 		float damage = dmg;
+
+		//the raised shield of the dark grand knight
+		damage = OathShield.guard(this, damage, src);
+		//and what the parts of the big ones did to the body
+		damage = Mutations.guard(this, damage, src);
 
 		Endure.EndureTracker endure = buff(Endure.EndureTracker.class);
 		if (!(src instanceof Char)){
@@ -1685,6 +1842,9 @@ public class Hero extends Char {
 		int effectiveDamage = preHP - postHP;
 
 		if (effectiveDamage <= 0) return;
+
+		ChampionHooks.onHeroDamaged(this, effectiveDamage, src);
+		SpecPowers.onHeroDamaged(this);
 
 		if (buff(Challenge.DuelParticipant.class) != null){
 			buff(Challenge.DuelParticipant.class).addDamage(effectiveDamage);
@@ -1805,7 +1965,11 @@ public class Hero extends Char {
 	
 	private boolean walkingToVisibleTrapInFog = false;
 	
-	private boolean getCloser( final int target ) {
+	private boolean getCloser( int target ) {
+
+		//a big one is reached by its edge, its middle is under the body
+		Colossus big = Colossus.at(target);
+		if (big != null) target = big.approachCell(pos);
 
 		if (target == pos)
 			return false;
@@ -1918,10 +2082,13 @@ public class Hero extends Char {
 	}
 	
 	public boolean handle( int cell ) {
-		
+
 		if (cell == -1) {
 			return false;
 		}
+
+		//up on the back of a big one: a cell off its body is a jump down
+		if (Climbing.handle( this, cell )) return true;
 
 		if (fieldOfView == null || fieldOfView.length != Dungeon.level.length()){
 			fieldOfView = new boolean[Dungeon.level.length()];
@@ -2006,6 +2173,15 @@ public class Hero extends Char {
 
 		return true;
 	}
+
+	//co-op friendly fire: the player chose to hit the hero standing there (CoopOrders asks first,
+	//a plain tap on a friend still swaps places)
+	public boolean attackFriend( int cell ){
+		Char ch = Actor.findChar( cell );
+		if (!CoopRules.friendlyTarget( this, ch ) || !ch.isAlive()) return handle( cell );
+		curAction = new HeroAction.Attack( ch );
+		return true;
+	}
 	
 	public void earnExp( int exp, Class source ) {
 
@@ -2063,7 +2239,7 @@ public class Hero extends Char {
 				buff(Talent.WandPreservationCounter.class).detach();
 			}
 
-			if (lvl < MAX_LEVEL) {
+			if (lvl < maxLevel()) {
 				lvl++;
 				levelUp = true;
 				
@@ -2074,6 +2250,7 @@ public class Hero extends Char {
 				updateHT( true );
 				attackSkill++;
 				defenseSkill++;
+				ChampionHooks.onLevelUp(this);
 
 			} else {
 				Buff.prolong(this, Bless.class, Bless.DURATION);
@@ -2093,7 +2270,8 @@ public class Hero extends Char {
 				GLog.p( Messages.get(this, "new_level") );
 				sprite.showStatus( CharSprite.POSITIVE, Messages.get(Hero.class, "level_up") );
 				Sample.INSTANCE.play( Assets.Sounds.LEVELUP );
-				if (lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1]){
+				if (lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1]
+						&& (lvl <= MAX_LEVEL || specialization != null)){
 					GLog.newLine();
 					GLog.p( Messages.get(this, "new_talent") );
 					StatusPane.talentBlink = 10f;
@@ -2110,6 +2288,10 @@ public class Hero extends Char {
 	public int maxExp() {
 		return maxExp( lvl );
 	}
+
+	public int maxLevel(){
+		return lvlCap;
+	}
 	
 	public static int maxExp( int lvl ){
 		return 5 + lvl * 5;
@@ -2124,6 +2306,11 @@ public class Hero extends Char {
 
 		if (buff.type == Buff.buffType.NEGATIVE &&
 				(buff(TimekeepersHourglass.timeStasis.class) != null || buff(TimeStasis.class) != null)) {
+			return false;
+		}
+
+		//the holy essence of a lightbearer burns away the afflictions of the dark
+		if (!restoring && SpecPowers.ward(this, buff)){
 			return false;
 		}
 
@@ -2172,6 +2359,9 @@ public class Hero extends Char {
 		
 		curAction = null;
 
+		//cooperative runs: an unblessed ankh revives directly, there is no level reset
+		boolean coopAnkh = Party.active();
+
 		Ankh ankh = null;
 
 		//look for ankhs in player inventory, prioritize ones which are blessed.
@@ -2184,7 +2374,7 @@ public class Hero extends Char {
 		if (ankh != null) {
 			interrupt();
 
-			if (ankh.isBlessed()) {
+			if (ankh.isBlessed() || coopAnkh) {
 				this.HP = HT / 4;
 
 				PotionOfHealing.cure(this);
@@ -2233,9 +2423,64 @@ public class Hero extends Char {
 			return;
 		}
 		
+		//cooperative runs: while another hero stands, this one only falls until the next floor
+		if (Party.active()){
+			boolean othersAlive = false;
+			for (Hero h : Party.living()){
+				if (h != this) othersAlive = true;
+			}
+			if (othersAlive){
+				coopFall( cause );
+				return;
+			}
+		}
+
+		//Thal-Vekhorr's arena: the first wipe of the run gets rewound instead
+		if (ThalFinale.rewindOnWipe( this )) return;
+		//falling on the dark continent still counts as a win
+		if (Continent.fallOnWipe( this )) return;
+
+		//the last hero of the party falls too, for the scoreboard
+		if (Party.active()) coopStats.downs++;
 		Actor.fixTime();
 		super.die( cause );
 		reallyDie( cause );
+	}
+
+	private void coopFall( Object cause ){
+		IronlordHooks.onHeroFall( this ); //mordekaiser
+		interrupt();
+		ready = false;
+		super.die( cause );
+		HP = 0;
+		coopDown = true;
+		coopStats.downs++;
+		//buffs stay attached but stop ticking until the hero comes back
+		for (Buff b : buffs()){
+			Actor.remove( b );
+		}
+		GLog.n( Messages.get(Party.class, "fallen", Party.name(this)) );
+		if (cause instanceof Hero.Doom) {
+			((Hero.Doom)cause).onDeath();
+		}
+		next();
+	}
+
+	//cooperative runs: called when the party reaches another floor. The fallen hero's clock stopped
+	//when it fell, so it first catches up with a hero already there: otherwise it would wait for as
+	//many turns as the party played since then.
+	public void coopReviveOnFloor( Hero arriving ){
+		if (arriving != null && arriving != this){
+			float behind = arriving.cooldown() - cooldown();
+			Actor.delayChar( this, behind );
+			CoopLog.line("revive hero " + Party.indexOf(this) + ", clock moved by " + behind);
+		}
+		coopDown = false;
+		HP = Math.max(1, HT/2);
+		for (Buff b : buffs()){
+			if (b.type == Buff.buffType.NEGATIVE) b.detach();
+		}
+		live();
 	}
 	
 	public static void reallyDie( Object cause ) {
@@ -2274,7 +2519,7 @@ public class Hero extends Char {
 				passable.add( cell );
 			}
 		}
-		Collections.shuffle( passable );
+		Random.shuffle(passable );
 
 		ArrayList<Item> items = new ArrayList<>(Dungeon.hero.belongings.backpack.items);
 		for (Integer cell : passable) {
@@ -2330,6 +2575,8 @@ public class Hero extends Char {
 		boolean wasHighGrass = Dungeon.level.map[step] == Terrain.HIGH_GRASS;
 
 		super.move( step, travelling);
+
+		ChampionHooks.onHeroMove(this, travelling);
 		
 		if (!flying && travelling) {
 			if (Dungeon.level.water[pos]) {
@@ -2674,7 +2921,9 @@ public class Hero extends Char {
 
 	@Override
 	public void next() {
-		if (isAlive())
+		//cooperative runs: a hero that falls while its turn is running (e.g. starving during a search)
+		//must still give the turn back, or every device waits for it forever
+		if (isAlive() || coopDown)
 			super.next();
 	}
 

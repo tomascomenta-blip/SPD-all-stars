@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.duelist;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopRules;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -110,11 +111,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class ElementalStrike extends ArmorAbility {
 
 	//TODO a few duplicates here (curse duplicates are fine)
-	private static final HashMap<Class<?extends Weapon.Enchantment>, Integer> effectTypes = new HashMap<>();
+	private static final HashMap<Class<?extends Weapon.Enchantment>, Integer> effectTypes = new LinkedHashMap<>();
 	static {
 		effectTypes.put(Blazing.class,      MagicMissile.FIRE_CONE);
 		effectTypes.put(Chilling.class,     MagicMissile.FROST_CONE);
@@ -389,7 +391,7 @@ public class ElementalStrike extends ArmorAbility {
 		ArrayList<Char> affected = new ArrayList<>();
 
 		for (Char ch : Actor.chars()) {
-			if (ch.alignment != Char.Alignment.ALLY && cone.cells.contains(ch.pos)) {
+			if ((ch.alignment != Char.Alignment.ALLY || CoopRules.friendlyTarget(hero, ch)) && cone.cells.contains(ch.pos)) {
 				affected.add(ch);
 			}
 		}

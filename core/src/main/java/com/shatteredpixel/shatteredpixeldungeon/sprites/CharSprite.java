@@ -23,7 +23,10 @@ package com.shatteredpixel.shatteredpixeldungeon.sprites;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
 import com.shatteredpixel.shatteredpixeldungeon.effects.DarkBlock;
 import com.shatteredpixel.shatteredpixeldungeon.effects.EmoIcon;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
@@ -97,6 +100,8 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 	protected Animation die;
 	
 	protected Callback animCallback;
+	//turn of the hero when the 'operate' animation started (cooperative runs)
+	private int operateTurn = -1;
 	
 	protected PosTweener motion;
 	
@@ -151,10 +156,12 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 		ch.sprite = this;
 		
 		place( ch.pos );
-		turnTo( ch.pos, Random.Int( Dungeon.level.length() ) );
+		Random.beginVisual();
+		turnTo( ch.pos, Random.Visual.Int( Dungeon.level.length() ) );
+		Random.endVisual();
 		renderShadow = true;
 		
-		if (ch != Dungeon.hero) {
+		if (ch != Dungeon.local()) {
 			if (health == null) {
 				health = new CharHealthIndicator(ch);
 			} else {
@@ -269,6 +276,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 	
 	public synchronized void operate( int cell, Callback callback ) {
 		animCallback = callback;
+		operateTurn = ch instanceof Hero ? ((Hero) ch).turnCount : -1;
 		turnTo( ch.pos, cell );
 		play( operate );
 	}
@@ -819,7 +827,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 				GameScene.ripple( ch.pos );
 			}
 			if (jumpCallback != null) {
-				jumpCallback.call();
+				Random.gameplay(jumpCallback);
 			}
 			GameScene.sortMobSprites();
 
@@ -845,7 +853,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 		if (animCallback != null) {
 			Callback executing = animCallback;
 			animCallback = null;
-			executing.call();
+			Random.gameplay(executing);
 		} else {
 			
 			if (anim == attack) {
@@ -856,6 +864,14 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 			} else if (anim == operate) {
 				
 				idle();
+				//cooperative runs: when the action that played this animation didn't wait for it
+				//(e.g. searching), its end comes at a different moment on each device. It may only
+				//touch the game while the hero is still in that same turn, waiting for it.
+				if (ch instanceof Hero && Party.active()
+						&& (((Hero) ch).turnCount != operateTurn
+							|| Actor.current() != ch)){
+					return;
+				}
 				ch.onOperateComplete();
 				
 			}

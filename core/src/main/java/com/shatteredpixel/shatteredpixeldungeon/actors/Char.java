@@ -21,6 +21,21 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopStats;
+import com.shatteredpixel.shatteredpixeldungeon.champions.ChampionHooks;
+import com.shatteredpixel.shatteredpixeldungeon.champions.bard.Ballad;
+import com.shatteredpixel.shatteredpixeldungeon.champions.forger.Brittle;
+import com.shatteredpixel.shatteredpixeldungeon.champions.forger.LivingForge;
+import com.shatteredpixel.shatteredpixeldungeon.champions.guardian.SpiritFire;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopBalance;
+import com.shatteredpixel.shatteredpixeldungeon.rift.RiftBosses;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.AntiOP;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKMarks;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.hunt.Mutations;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.reward.MeltedClock;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.reward.SpecPowers;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.TourneyFoes;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.WormQuest;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -388,6 +403,8 @@ public abstract class Char extends Actor {
 		} else if (hit( this, enemy, accMulti, false )) {
 			
 			int dr = Math.round(enemy.drRoll() * AscensionChallenge.statModifier(enemy));
+			//armor burnt away by the Guardian's spirit fire, for every attacker
+			dr = Math.max(0, dr - SpiritFire.Scorched.shredOf(enemy));
 			
 			if (this instanceof Hero){
 				Hero h = (Hero)this;
@@ -416,6 +433,13 @@ public abstract class Char extends Actor {
 			}
 
 			dmg = dmg*dmgMulti;
+			//cooperative champions (ornn): brittle enemies take extra damage from any hero, forged weapons hit harder
+			dmg = Brittle.proc(this, enemy, dmg);
+			dmg *= LivingForge.damageFactor(this);
+			//cooperative runs: allies empowered by the Hand of Baron
+			dmg *= RiftBosses.attackFactor(this);
+			//the banner of the herald cheers on whoever fights next to it
+			dmg *= TourneyFoes.PlantedBanner.dealtFactor(this);
 
 			//flat damage bonus is affected by multipliers
 			dmg += dmgBonus;
@@ -449,8 +473,11 @@ public abstract class Char extends Actor {
 			for (ChampionEnemy buff : buffs(ChampionEnemy.class)){
 				dmg *= buff.meleeDamageFactor();
 			}
+			//cooperative champions: the Bard's ballad of courage
+			dmg *= Ballad.Valor.damageFactor(this);
 
 			dmg *= AscensionChallenge.statModifier(this);
+			dmg *= CoopBalance.damageFactor(this); //coop: bigger parties
 
 			//friendly endure
 			Endure.EndureTracker endure = buff(Endure.EndureTracker.class);
@@ -510,6 +537,7 @@ public abstract class Char extends Actor {
 			}
 
 			enemy.damage( effectiveDamage, this );
+			Brittle.afterHit(this, enemy); //ornn
 
 			if (buff(FireImbue.class) != null)  buff(FireImbue.class).proc(enemy);
 			if (buff(FrostImbue.class) != null) buff(FrostImbue.class).proc(enemy);
@@ -722,6 +750,8 @@ public abstract class Char extends Actor {
 	
 	public int defenseProc( Char enemy, int damage ) {
 
+		ChampionHooks.onDefenseProc(this, enemy);
+
 		Earthroot.Armor armor = buff( Earthroot.Armor.class );
 		if (armor != null) {
 			damage = armor.absorb( damage );
@@ -833,6 +863,9 @@ public abstract class Char extends Actor {
 			return;
 		}
 
+		//cooperative runs: two bosses on the same floor may turn on each other
+		RiftBosses.onDamage(this, src);
+
 		if(isInvulnerable(src.getClass())){
 			sprite.showStatus(CharSprite.POSITIVE, Messages.get(this, "invulnerable"));
 			return;
@@ -907,6 +940,13 @@ public abstract class Char extends Actor {
 		if (alignment != Alignment.ALLY && this.buff(DeathMark.DeathMarkTracker.class) != null){
 			damage *= 1.25f;
 		}
+		//alt world marks: Nightmare of the Spiritist, bounty of the Gunslinger
+		if (alignment != Alignment.ALLY) damage *= SKMarks.damageFactor(this);
+		else damage *= TourneyFoes.PlantedBanner.takenFactor(this);
+		//the old tunnels of the rock worm, in the room of DM-300
+		damage *= WormQuest.coverFactor(this);
+		//yog hunters vs. the demonic, both ways
+		damage *= SpecPowers.damageFactor(this, src);
 
 		//two separate things can convert dmg to bleed, we handle that here
 		//we do this before modifiers are applied back to dmg as we don't want to stack them twice (from this and bleed)
@@ -940,6 +980,8 @@ public abstract class Char extends Actor {
 		for (ChampionEnemy buff : buffs(ChampionEnemy.class)){
 			dmg = (int) Math.ceil(dmg * buff.damageTakenFactor());
 		}
+		//anti-op: the cap per hit of the run, if it has one
+		dmg = AntiOP.cap(this, src, dmg);
 		
 		//TODO improve this when I have proper damage source logic
 		if (AntiMagic.RESISTS.contains(src.getClass())){
@@ -987,14 +1029,15 @@ public abstract class Char extends Actor {
 		dmg = ShieldBuff.processDamage(this, dmg, src);
 		shielded -= dmg;
 		HP -= dmg;
+		CoopStats.damaged( this, src, dmg + shielded );
 
 		if (HP > 0 && src instanceof Char && ((Char) src).buff(Grim.GrimTracker.class) != null){
 
 			float finalChance = ((Char) src).buff(Grim.GrimTracker.class).maxChance;
-			finalChance *= (float)Math.pow( ((HT - HP) / (float)HT), 2);
+			finalChance *= (float)StrictMath.pow( ((HT - HP) / (float)HT), 2);
 
 			if (Random.Float() < finalChance) {
-				int extraDmg = Math.round(HP*resist(Grim.class));
+				int extraDmg = AntiOP.room(this, src, dmg, Math.round(HP*resist(Grim.class)));
 				dmg += extraDmg;
 				HP -= extraDmg;
 
@@ -1069,6 +1112,7 @@ public abstract class Char extends Actor {
 		if (HP < 0) HP = 0;
 
 		if (!isAlive()) {
+			CoopStats.finished( this, src );
 			die( src );
 		} else if (HP == 0 && buff(DeathMark.DeathMarkTracker.class) != null){
 			DeathMark.processFearTheReaper(this);
@@ -1076,7 +1120,7 @@ public abstract class Char extends Actor {
 	}
 
 	//these are misc. sources of physical damage which do not apply armor, they get a different icon
-	private static HashSet<Class> NO_ARMOR_PHYSICAL_SOURCES = new HashSet<>();
+	private static HashSet<Class> NO_ARMOR_PHYSICAL_SOURCES = new LinkedHashSet<>();
 	{
 		NO_ARMOR_PHYSICAL_SOURCES.add(CrystalSpire.SpireSpike.class);
 		NO_ARMOR_PHYSICAL_SOURCES.add(GnollGeomancer.Boulder.class);
@@ -1161,6 +1205,12 @@ public abstract class Char extends Actor {
 			return;
 		}
 
+		MeltedClock.Halt halt = buff(MeltedClock.Halt.class);
+		if (halt != null){
+			halt.processTime(time);
+			return;
+		}
+
 		super.spendConstant(time);
 	}
 
@@ -1188,7 +1238,7 @@ public abstract class Char extends Actor {
 	@SuppressWarnings("unchecked")
 	//returns all buffs assignable from the given buff class
 	public synchronized <T extends Buff> HashSet<T> buffs( Class<T> c ) {
-		HashSet<T> filtered = new HashSet<>();
+		HashSet<T> filtered = new LinkedHashSet<>();
 		for (Buff b : buffs) {
 			if (c.isInstance( b )) {
 				filtered.add( (T)b );
@@ -1285,6 +1335,7 @@ public abstract class Char extends Actor {
 		float stealth = 0;
 
 		stealth += Obfuscation.stealthBoost(this, glyphLevel(Obfuscation.class));
+		stealth += Mutations.stealth(this);
 
 		return stealth;
 	}
@@ -1353,12 +1404,12 @@ public abstract class Char extends Actor {
 		next();
 	}
 	
-	protected final HashSet<Class> resistances = new HashSet<>();
+	protected final HashSet<Class> resistances = new LinkedHashSet<>();
 	
 	//returns percent effectiveness after resistances
 	//TODO currently resistances reduce effectiveness by a static 50%, and do not stack.
 	public float resist( Class effect ){
-		HashSet<Class> resists = new HashSet<>(resistances);
+		HashSet<Class> resists = new LinkedHashSet<>(resistances);
 		for (Property p : properties()){
 			resists.addAll(p.resistances());
 		}
@@ -1375,10 +1426,10 @@ public abstract class Char extends Actor {
 		return result * RingOfElements.resist(this, effect);
 	}
 	
-	protected final HashSet<Class> immunities = new HashSet<>();
+	protected final HashSet<Class> immunities = new LinkedHashSet<>();
 	
 	public boolean isImmune(Class effect ){
-		HashSet<Class> immunes = new HashSet<>(immunities);
+		HashSet<Class> immunes = new LinkedHashSet<>(immunities);
 		for (Property p : properties()){
 			immunes.addAll(p.immunities());
 		}
@@ -1403,10 +1454,10 @@ public abstract class Char extends Actor {
 		return buff(Challenge.SpectatorFreeze.class) != null || buff(Invulnerability.class) != null;
 	}
 
-	protected HashSet<Property> properties = new HashSet<>();
+	protected HashSet<Property> properties = new LinkedHashSet<>();
 
 	public HashSet<Property> properties() {
-		HashSet<Property> props = new HashSet<>(properties);
+		HashSet<Property> props = new LinkedHashSet<>(properties);
 		//TODO any more of these and we should make it a property of the buff, like with resistances/immunities
 		if (buff(ChampionEnemy.Giant.class) != null) {
 			props.add(Property.LARGE);
@@ -1415,40 +1466,40 @@ public abstract class Char extends Actor {
 	}
 
 	public enum Property{
-		BOSS ( new HashSet<Class>( Arrays.asList(Grim.class, GrimTrap.class, ScrollOfRetribution.class, ScrollOfPsionicBlast.class)),
-				new HashSet<Class>( Arrays.asList(AllyBuff.class, Dread.class) )),
-		MINIBOSS ( new HashSet<Class>(),
-				new HashSet<Class>( Arrays.asList(AllyBuff.class, Dread.class) )),
+		BOSS ( new LinkedHashSet<Class>( Arrays.asList(Grim.class, GrimTrap.class, ScrollOfRetribution.class, ScrollOfPsionicBlast.class)),
+				new LinkedHashSet<Class>( Arrays.asList(AllyBuff.class, Dread.class) )),
+		MINIBOSS ( new LinkedHashSet<Class>(),
+				new LinkedHashSet<Class>( Arrays.asList(AllyBuff.class, Dread.class) )),
 		BOSS_MINION,
 		UNDEAD,
 		DEMONIC,
-		INORGANIC ( new HashSet<Class>(),
-				new HashSet<Class>( Arrays.asList(Bleeding.class, ToxicGas.class, Poison.class) )),
-		FIERY ( new HashSet<Class>( Arrays.asList(WandOfFireblast.class, Elemental.FireElemental.class)),
-				new HashSet<Class>( Arrays.asList(Burning.class, Blazing.class))),
-		ICY ( new HashSet<Class>( Arrays.asList(WandOfFrost.class, Elemental.FrostElemental.class)),
-				new HashSet<Class>( Arrays.asList(Frost.class, Chill.class))),
-		ACIDIC ( new HashSet<Class>( Arrays.asList(Corrosion.class)),
-				new HashSet<Class>( Arrays.asList(Ooze.class))),
-		ELECTRIC ( new HashSet<Class>( Arrays.asList(WandOfLightning.class, Shocking.class, Potential.class,
+		INORGANIC ( new LinkedHashSet<Class>(),
+				new LinkedHashSet<Class>( Arrays.asList(Bleeding.class, ToxicGas.class, Poison.class) )),
+		FIERY ( new LinkedHashSet<Class>( Arrays.asList(WandOfFireblast.class, Elemental.FireElemental.class)),
+				new LinkedHashSet<Class>( Arrays.asList(Burning.class, Blazing.class))),
+		ICY ( new LinkedHashSet<Class>( Arrays.asList(WandOfFrost.class, Elemental.FrostElemental.class)),
+				new LinkedHashSet<Class>( Arrays.asList(Frost.class, Chill.class))),
+		ACIDIC ( new LinkedHashSet<Class>( Arrays.asList(Corrosion.class)),
+				new LinkedHashSet<Class>( Arrays.asList(Ooze.class))),
+		ELECTRIC ( new LinkedHashSet<Class>( Arrays.asList(WandOfLightning.class, Shocking.class, Potential.class,
 										Electricity.class, ShockingDart.class, Elemental.ShockElemental.class )),
-				new HashSet<Class>()),
+				new LinkedHashSet<Class>()),
 		LARGE,
-		IMMOVABLE ( new HashSet<Class>(),
-				new HashSet<Class>( Arrays.asList(Vertigo.class) )),
+		IMMOVABLE ( new LinkedHashSet<Class>(),
+				new LinkedHashSet<Class>( Arrays.asList(Vertigo.class) )),
 		//A character that is functionally an interactable object or piece of scenery
 		// (or a mimic that is effectively pretending to be one with the help of a mimic tooth)
 		OBJECT,
 		//A character that acts in an unchanging manner. immune to AI state debuffs or stuns/slows
-		STATIC( new HashSet<Class>(),
-				new HashSet<Class>( Arrays.asList(AllyBuff.class, Dread.class, Terror.class, Amok.class, Charm.class, Sleep.class,
+		STATIC( new LinkedHashSet<Class>(),
+				new LinkedHashSet<Class>( Arrays.asList(AllyBuff.class, Dread.class, Terror.class, Amok.class, Charm.class, Sleep.class,
 									Paralysis.class, Frost.class, Chill.class, Slow.class, Speed.class) ));
 
 		private HashSet<Class> resistances;
 		private HashSet<Class> immunities;
 		
 		Property(){
-			this(new HashSet<Class>(), new HashSet<Class>());
+			this(new LinkedHashSet<Class>(), new LinkedHashSet<Class>());
 		}
 		
 		Property( HashSet<Class> resistances, HashSet<Class> immunities){
@@ -1457,11 +1508,11 @@ public abstract class Char extends Actor {
 		}
 		
 		public HashSet<Class> resistances(){
-			return new HashSet<>(resistances);
+			return new LinkedHashSet<>(resistances);
 		}
 		
 		public HashSet<Class> immunities(){
-			return new HashSet<>(immunities);
+			return new LinkedHashSet<>(immunities);
 		}
 
 	}

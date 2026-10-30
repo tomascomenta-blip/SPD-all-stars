@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopOrders;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.ui.InventoryPane;
@@ -48,18 +49,18 @@ public class WndUseItem extends WndInfoItem {
 
 		float y = height;
 		
-		if (Dungeon.hero.isAlive() && Dungeon.hero.belongings.contains(item)) {
+		if (Dungeon.local().isAlive() && Dungeon.local().belongings.contains(item)) {
 			y += GAP;
 			ArrayList<RedButton> buttons = new ArrayList<>();
-			for (final String action : item.actions(Dungeon.hero)) {
+			for (final String action : item.actions(Dungeon.local())) {
 
-				RedButton btn = new RedButton(item.actionName(action, Dungeon.hero), 8) {
+				RedButton btn = new RedButton(item.actionName(action, Dungeon.local()), 8) {
 					@Override
 					protected void onClick() {
 						hide();
 						if (owner != null && owner.parent != null) owner.hide();
-						if (Dungeon.hero.isAlive() && Dungeon.hero.belongings.contains(item)) {
-							item.execute(Dungeon.hero, action);
+						if (Dungeon.local().isAlive() && Dungeon.local().belongings.contains(item)) {
+							CoopOrders.execute(item, action);
 						}
 						Item.updateQuickslot();
 						if (action.equals(item.defaultAction()) && item.usesTargeting && owner == null) {

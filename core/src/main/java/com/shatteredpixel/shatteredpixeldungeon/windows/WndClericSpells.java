@@ -144,9 +144,9 @@ public class WndClericSpells extends Window {
 			this.tome = tome;
 			this.info = info;
 
-			if (!tome.canCast(Dungeon.hero, spell)){
+			if (!tome.canCast(Dungeon.local(), spell)){
 				icon.alpha( 0.3f );
-			} else if (spell == GuidingLight.INSTANCE && spell.chargeUse(Dungeon.hero) == 0){
+			} else if (spell == GuidingLight.INSTANCE && spell.chargeUse(Dungeon.local()) == 0){
 				icon.brightness(3);
 			}
 
@@ -157,7 +157,7 @@ public class WndClericSpells extends Window {
 		@Override
 		protected void onPointerDown() {
 			super.onPointerDown();
-			if (spell == GuidingLight.INSTANCE && spell.chargeUse(Dungeon.hero) == 0){
+			if (spell == GuidingLight.INSTANCE && spell.chargeUse(Dungeon.local()) == 0){
 				icon.brightness(4);
 			}
 		}
@@ -165,9 +165,9 @@ public class WndClericSpells extends Window {
 		@Override
 		protected void onPointerUp() {
 			super.onPointerUp();
-			if (!tome.canCast(Dungeon.hero, spell)){
+			if (!tome.canCast(Dungeon.local(), spell)){
 				icon.alpha( 0.3f );
-			} else if (spell == GuidingLight.INSTANCE && spell.chargeUse(Dungeon.hero) == 0){
+			} else if (spell == GuidingLight.INSTANCE && spell.chargeUse(Dungeon.local()) == 0){
 				icon.brightness(3);
 			}
 		}

@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
@@ -233,6 +234,8 @@ public class SPDSettings extends GameSettings {
 	}
 	
 	public static boolean intro() {
+		//the tutorial changes some game rules, so cooperative runs never use it
+		if (CoopSession.active()) return false;
 		return getBoolean( KEY_INTRO, true );
 	}
 	
@@ -246,6 +249,38 @@ public class SPDSettings extends GameSettings {
 	
 	public static void challenges( int value ) {
 		put( KEY_CHALLENGES, value );
+	}
+
+	//alt worlds: difficulty of the next run (0 easy, 1 normal ... 4) and the chance of
+	//the alt worlds, in tenths (0 never ... 10 always)
+	public static final String KEY_SK_DIFFICULTY = "sk_difficulty";
+	public static final String KEY_SK_WORLDS     = "sk_world_chance";
+
+	public static void skDifficulty( int value ) {
+		put( KEY_SK_DIFFICULTY, value );
+	}
+
+	public static int skDifficulty() {
+		return getInt( KEY_SK_DIFFICULTY, 1, 0, 4 );
+	}
+
+	public static void skWorldChance( int value ) {
+		put( KEY_SK_WORLDS, value );
+	}
+
+	public static int skWorldChance() {
+		return getInt( KEY_SK_WORLDS, 5, 0, 10 );
+	}
+
+	//co-op room of the host: heroes can hurt each other (goes into the run when it starts or resumes)
+	public static final String KEY_COOP_FRIENDLY_FIRE = "coop_friendly_fire";
+
+	public static void coopFriendlyFire( boolean value ) {
+		put( KEY_COOP_FRIENDLY_FIRE, value );
+	}
+
+	public static boolean coopFriendlyFire() {
+		return getBoolean( KEY_COOP_FRIENDLY_FIRE, false );
 	}
 	
 	public static int challenges() {

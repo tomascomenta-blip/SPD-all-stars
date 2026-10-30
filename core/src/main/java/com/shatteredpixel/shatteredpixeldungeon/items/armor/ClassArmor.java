@@ -36,6 +36,10 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.automaton.AutomatonArmor;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.beastmaster.BeastmasterArmor;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.gunslinger.GunslingerArmor;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.spiritist.SpiritistArmor;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
@@ -117,6 +121,55 @@ abstract public class ClassArmor extends Armor {
 				break;
 			case CLERIC:
 				classArmor = new ClericArmor();
+				break;
+			case EXECUTIONER:
+				classArmor = new ExecutionerArmor();
+				break;
+			case SCOUT:
+				classArmor = new ScoutArmor();
+				break;
+			case PYROMANCER:
+				classArmor = new PyromancerArmor();
+				break;
+			case JAILER:
+				classArmor = new JailerArmor();
+				break;
+			case BRAWLER:
+				classArmor = new BrawlerArmor();
+				break;
+			case GRAVEDIGGER:
+				classArmor = new GravediggerArmor();
+				break;
+			case GUARDIAN:
+				classArmor = new GuardianArmor();
+				break;
+			case BARD:
+				classArmor = new BardArmor();
+				break;
+			//botanico
+			case BOTANIST:
+				classArmor = new BotanistArmor();
+				break;
+			//ornn
+			case FORGER:
+				classArmor = new ForgerArmor();
+				break;
+			//mordekaiser
+			case IRONLORD:
+				classArmor = new IronlordArmor();
+				break;
+			//alt worlds
+			case AUTOMATON:
+				classArmor = new AutomatonArmor();
+				break;
+			case BEASTMASTER:
+				classArmor = new BeastmasterArmor();
+				break;
+			case SPIRITIST:
+				classArmor = new SpiritistArmor();
+				break;
+			case GUNSLINGER:
+				classArmor = new GunslingerArmor();
 				break;
 		}
 		

@@ -25,6 +25,7 @@ import com.badlogic.gdx.Input;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopAuto;
 import com.shatteredpixel.shatteredpixeldungeon.effects.BadgeBanner;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Languages;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -209,6 +210,7 @@ public class PixelScene extends Scene {
 		}
 
 		super.update();
+		CoopAuto.sceneTick();
 		//20% deadzone
 		if (!Cursor.isCursorCaptured()) {
 			if (Math.abs(ControllerHandler.rightStickPosition.x) >= 0.2f
@@ -335,6 +337,9 @@ public class PixelScene extends Scene {
 		//some systems (macOS mainly) require this back buffer check to ensure
 		// that we're working with real pixels, not logical ones
 		float scale = DeviceCompat.getRealPixelScaleX();
+		//a minimized window has no back buffer: text made meanwhile (a partner's turn in co-op)
+		//would ask for a font of size 0, which can't be generated
+		if (!(scale > 0)) scale = 1;
 		RenderedTextBlock result = new RenderedTextBlock( text, size*Math.round(defaultZoom*scale));
 		result.zoom(1/(float)Math.round(defaultZoom*scale));
 		return result;

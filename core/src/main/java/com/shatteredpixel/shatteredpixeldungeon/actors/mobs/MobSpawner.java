@@ -24,11 +24,14 @@ package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.RatSkull;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKWorlds;
 import com.watabou.utils.Random;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+
+import java.util.LinkedHashMap;
 
 public class MobSpawner extends Actor {
 	{
@@ -60,6 +63,11 @@ public class MobSpawner extends Actor {
 	}
 
 	public static ArrayList<Class<? extends Mob>> getMobRotation(int depth ){
+		ArrayList<Class<? extends Mob>> worldMobs = SKWorlds.mobRotation( depth );
+		if (worldMobs != null){
+			Random.shuffle(worldMobs);
+			return worldMobs;
+		}
 		ArrayList<Class<? extends Mob>> mobs = standardMobRotation( depth );
 		addRareMobs(depth, mobs);
 		swapMobAlts(mobs);
@@ -254,7 +262,7 @@ public class MobSpawner extends Actor {
 		}
 	}
 
-	public static final HashMap<Class<?extends Mob>, Class<?extends Mob>> RARE_ALTS = new HashMap<>();
+	public static final HashMap<Class<?extends Mob>, Class<?extends Mob>> RARE_ALTS = new LinkedHashMap<>();
 	static {
 		RARE_ALTS.put(Rat.class,            Albino.class);
 		RARE_ALTS.put(Gnoll.class,          GnollExile.class);

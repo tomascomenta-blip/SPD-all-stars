@@ -18,3 +18,6 @@ local.properties
 #intellij project files
 *.iml
 *.idea
+
+# LWJGL natives the desktop game extracts into its working directory
+.lwjgl/

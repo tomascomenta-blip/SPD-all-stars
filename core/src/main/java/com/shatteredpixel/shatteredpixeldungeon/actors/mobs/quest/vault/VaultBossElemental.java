@@ -77,6 +77,7 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class VaultBossElemental extends Mob {
 
@@ -467,7 +468,7 @@ public class VaultBossElemental extends Mob {
 
 	@Override
 	public HashSet<Property> properties() {
-		HashSet<Property> props = new HashSet<>(properties);
+		HashSet<Property> props = new LinkedHashSet<>(properties);
 		if (form == ElementalForm.FIRE){
 			props.add(Property.FIERY);
 		} else if (form == ElementalForm.FROST){
@@ -691,7 +692,7 @@ public class VaultBossElemental extends Mob {
 		wallDistances.add(3, (c.y+6) - heroPos.y);
 
 		ArrayList<Integer> sortedDistances = (ArrayList<Integer>) wallDistances.clone();
-		Collections.shuffle(sortedDistances);
+		Random.shuffle(sortedDistances);
 		Collections.sort(sortedDistances);
 
 		int wallFrom = 0;
@@ -918,10 +919,10 @@ public class VaultBossElemental extends Mob {
 	public static class FrostCone extends Buff {
 
 		private int startPos;
-		private HashSet<Integer> cells = new HashSet<>();
+		private HashSet<Integer> cells = new LinkedHashSet<>();
 		private int distance = 2;
 
-		private HashSet<Emitter> emitters = new HashSet<>();
+		private HashSet<Emitter> emitters = new LinkedHashSet<>();
 
 		@Override
 		public boolean act() {
@@ -1059,7 +1060,7 @@ public class VaultBossElemental extends Mob {
 				altDirection = Random.Int(2) == 0;
 			}
 
-			HashSet<Integer> cells = new HashSet<>();
+			HashSet<Integer> cells = new LinkedHashSet<>();
 			if (fullVortex) {
 				cells.addAll(getCells(targetCell, distance, -1, -1));
 				cells.addAll(getCells(targetCell, distance, -1, 1));
@@ -1108,7 +1109,7 @@ public class VaultBossElemental extends Mob {
 			emitters.clear();
 
 			if (targetCell != -1) {
-				HashSet<Integer> cells = new HashSet<>();
+				HashSet<Integer> cells = new LinkedHashSet<>();
 				if (fullVortex) {
 					cells.addAll(getCells(targetCell, distance, -1, -1));
 					cells.addAll(getCells(targetCell, distance, -1, 1));
@@ -1161,12 +1162,12 @@ public class VaultBossElemental extends Mob {
 		private HashSet<Integer> getCells(int start, int dist, int dirX, int dirY){
 			dist = Math.abs(dist);
 			if (getFurthestValid(start, dirX, dirY) < dist){
-				return new HashSet<>();
+				return new LinkedHashSet<>();
 			}
 			int xOfs = (dirX*(dist+1)/2);
 			int yOfs = (dirY*dist/2)*Dungeon.level.width();
 			int initialOfsCell = start + xOfs + yOfs;
-			HashSet<Integer> cells = new HashSet<>();
+			HashSet<Integer> cells = new LinkedHashSet<>();
 			int cell = initialOfsCell;
 			do {
 				cells.add(cell);
@@ -1231,7 +1232,7 @@ public class VaultBossElemental extends Mob {
 
 	public void doLightningBolt(int cell){
 
-		HashSet<Integer> affectedCells = new HashSet<>();
+		HashSet<Integer> affectedCells = new LinkedHashSet<>();
 
 		Ballistica bolt = new Ballistica(pos, cell, Ballistica.STOP_SOLID);
 		for (int c : bolt.subPath(0, bolt.dist)){

@@ -1,0 +1,2 @@
+# Java sources are text: whatever line endings an editor saves, git keeps LF
+*.java text

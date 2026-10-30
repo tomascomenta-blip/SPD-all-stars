@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopOrders;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -100,9 +101,9 @@ public class AttackIndicator extends Tag {
 			active = true;
 			if (bg.width > 0 && sprite != null)sprite.visible = true;
 
-			if (Dungeon.hero.isAlive()) {
+			if (Dungeon.local().isAlive()) {
 
-				enable(Dungeon.hero.ready);
+				enable(Dungeon.local().ready);
 
 			} else {
 				visible( false );
@@ -114,10 +115,10 @@ public class AttackIndicator extends Tag {
 	private synchronized void checkEnemies() {
 
 		candidates.clear();
-		int v = Dungeon.hero.visibleEnemies();
+		int v = Dungeon.local().visibleEnemies();
 		for (int i=0; i < v; i++) {
-			Mob mob = Dungeon.hero.visibleEnemy( i );
-			if ( Dungeon.hero.canAttack( mob) ) {
+			Mob mob = Dungeon.local().visibleEnemy( i );
+			if ( Dungeon.local().canAttack( mob) ) {
 				candidates.add( mob );
 			}
 		}
@@ -180,9 +181,9 @@ public class AttackIndicator extends Tag {
 	@Override
 	protected void onClick() {
 		super.onClick();
-		if (enabled && Dungeon.hero.ready) {
-			if (Dungeon.hero.handle( lastTarget.pos )) {
-				Dungeon.hero.next();
+		if (enabled && Dungeon.local().ready) {
+			{
+				CoopOrders.handleCell( lastTarget.pos );
 			}
 		}
 	}
@@ -193,7 +194,8 @@ public class AttackIndicator extends Tag {
 	}
 
 	public static void target(Char target ) {
-		if (target == null) return;
+		//a hero under mind control (alt worlds) can attack another hero: not a target for the UI
+		if (!(target instanceof Mob)) return;
 		synchronized (instance) {
 			instance.lastTarget = (Mob) target;
 			instance.updateImage();

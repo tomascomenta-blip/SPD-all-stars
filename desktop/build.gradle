@@ -53,6 +53,7 @@ runtime {
                'java.desktop',
                'jdk.unsupported',
                'jdk.crypto.cryptoki',
+               'jdk.crypto.ec', //TLS for co-op over the internet
                'jdk.management']
     options = ['--strip-debug',
                '--compress', '2',
@@ -124,6 +125,6 @@ dependencies {
     implementation "org.lwjgl:lwjgl-tinyfd:3.3.3:natives-linux"
     implementation "org.lwjgl:lwjgl-tinyfd:3.3.3:natives-linux-arm64"
 
-    implementation project(':services:updates:githubUpdates')
-    implementation project(':services:news:shatteredNews')
+    implementation project(':services:updates:debugUpdates')
+    implementation project(':services:news:debugNews')
 }

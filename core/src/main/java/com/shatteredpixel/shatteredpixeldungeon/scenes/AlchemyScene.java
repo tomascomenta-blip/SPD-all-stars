@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopAlchemy;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
@@ -248,8 +249,8 @@ public class AlchemyScene extends PixelScene {
 		Button invSelector = new Button(){
 			@Override
 			protected void onClick() {
-						if (Dungeon.hero != null) {
-							ArrayList<Bag> bags = Dungeon.hero.belongings.getBags();
+						if (Dungeon.local() != null) {
+							ArrayList<Bag> bags = Dungeon.local().belongings.getBags();
 
 							String[] names = new String[bags.size()];
 							Image[] images = new Image[bags.size()];
@@ -274,7 +275,7 @@ public class AlchemyScene extends PixelScene {
 									ArrayList<Item> items = (ArrayList<Item>) bag.items.clone();
 
 									for(Item i : bag.items){
-										if (Dungeon.hero.belongings.lostInventory() && !i.keptThroughLostInventory()) items.remove(i);
+										if (Dungeon.local().belongings.lostInventory() && !i.keptThroughLostInventory()) items.remove(i);
 										if (!Recipe.usableInRecipe(i)) items.remove(i);
 									}
 
@@ -306,16 +307,7 @@ public class AlchemyScene extends PixelScene {
 											Item item = items.get(idx);
 											synchronized (inputs) {
 												if (item != null && inputs[0] != null) {
-													for (int i = 0; i < inputs.length; i++) {
-														if (inputs[i].item() == null) {
-															if (item instanceof LiquidMetal || item instanceof MissileWeapon){
-																inputs[i].item(item.detachAll(Dungeon.hero.belongings.backpack));
-															} else {
-																inputs[i].item(item.detach(Dungeon.hero.belongings.backpack));
-															}
-															break;
-														}
-													}
+													addInput(item);
 													updateState();
 												}
 											}
@@ -361,7 +353,7 @@ public class AlchemyScene extends PixelScene {
 			protected void onClick() {
 				super.onClick();
 				if (lastRecipe != null){
-					populate(lastIngredients, Dungeon.hero.belongings);
+					populate(lastIngredients, Dungeon.local().belongings);
 				}
 			}
 
@@ -533,7 +525,7 @@ public class AlchemyScene extends PixelScene {
 		align(btnGuide);
 		add(btnGuide);
 
-		TrinketCatalyst cata = Dungeon.hero.belongings.getItem(TrinketCatalyst.class);
+		TrinketCatalyst cata = Dungeon.local().belongings.getItem(TrinketCatalyst.class);
 		if (cata != null && cata.hasRolledTrinkets()){
 			addToFront(new TrinketCatalyst.WndTrinket(cata));
 		}
@@ -577,22 +569,47 @@ public class AlchemyScene extends PixelScene {
 		public void onSelect( Item item ) {
 			synchronized (inputs) {
 				if (item != null && inputs[0] != null) {
-					for (int i = 0; i < inputs.length; i++) {
-						if (inputs[i].item() == null) {
-							if (item instanceof LiquidMetal || item instanceof MissileWeapon){
-								inputs[i].item(item.detachAll(Dungeon.hero.belongings.backpack));
-							} else {
-								inputs[i].item(item.detach(Dungeon.hero.belongings.backpack));
-							}
-							break;
-						}
-					}
+					addInput(item);
 					updateState();
 				}
 			}
 		}
 	};
 	
+	//puts an item from the backpack into the first free input
+	private void addInput( Item item ){
+		if (CoopAlchemy.active()){
+			//cooperative runs: the change is an order, so the other device makes it too
+			CoopAlchemy.localAdd(item, false);
+			syncInputsFromBench();
+			return;
+		}
+		for (int i = 0; i < inputs.length; i++) {
+			if (inputs[i].item() == null) {
+				if (item instanceof LiquidMetal || item instanceof MissileWeapon){
+					inputs[i].item(item.detachAll(Dungeon.local().belongings.backpack));
+				} else {
+					inputs[i].item(item.detach(Dungeon.local().belongings.backpack));
+				}
+				break;
+			}
+		}
+	}
+
+	private void syncInputsFromBench(){
+		Item[] bench = CoopAlchemy.bench(Dungeon.local());
+		for (int i = 0; i < inputs.length && i < bench.length; i++){
+			if (inputs[i] != null && inputs[i].item() != bench[i]) inputs[i].item(bench[i]);
+		}
+	}
+
+	private int inputIndex( InputButton b ){
+		for (int i = 0; i < inputs.length; i++){
+			if (inputs[i] == b) return i;
+		}
+		return -1;
+	}
+
 	private<T extends Item> ArrayList<T> filterInput(Class<? extends T> itemClass){
 		ArrayList<T> filtered = new ArrayList<>();
 		for (int i = 0; i < inputs.length; i++){
@@ -691,7 +708,25 @@ public class AlchemyScene extends PixelScene {
 		
 		Item result = null;
 		
-		if (recipe != null){
+		if (recipe != null && CoopAlchemy.active()){
+			//cooperative runs: the brewing itself is an order, see CoopAlchemy.combine
+			result = CoopAlchemy.localCombine(slot);
+			createEnergyText();
+			if (result != null){
+				bubbleEmitter.start(Speck.factory( Speck.BUBBLE ), 0.01f, 100 );
+				smokeEmitter.burst(Speck.factory( Speck.WOOL ), 10 );
+				Sample.INSTANCE.play( Assets.Sounds.PUFF );
+				synchronized (inputs) {
+					syncInputsFromBench();
+					for (InputButton b : inputs){
+						if (b != null && b.item() != null) b.slot.updateText();
+					}
+				}
+				updateState();
+				outputs[0].item(result);
+			}
+			result = null;
+		} else if (recipe != null){
 			int cost = recipe.cost(ingredients);
 			if (toolkit != null){
 				cost = toolkit.consumeEnergy(cost);
@@ -726,7 +761,7 @@ public class AlchemyScene extends PixelScene {
 
 		boolean foundItems = true;
 		for (Item i : lastIngredients){
-			Item found = Dungeon.hero.belongings.getSimilar(i);
+			Item found = Dungeon.local().belongings.getSimilar(i);
 			if (found == null){ //atm no quantity check as items are always loaded individually
 				//currently found can be true if we need, say, 3x of an item but only have 2x of it
 				foundItems = false;
@@ -758,7 +793,7 @@ public class AlchemyScene extends PixelScene {
 
 		int resultQuantity = result.quantity();
 		if (!result.collect()){
-			Dungeon.level.drop(result, Dungeon.hero.pos);
+			Dungeon.level.drop(result, Dungeon.local().pos);
 		}
 
 		Statistics.itemsCrafted++;
@@ -801,7 +836,11 @@ public class AlchemyScene extends PixelScene {
 			ArrayList<Item> found = inventory.getAllSimilar(finding);
 			while (!found.isEmpty() && needed > 0){
 				Item detached;
-				if (finding instanceof LiquidMetal || finding instanceof MissileWeapon) {
+				if (CoopAlchemy.active()){
+					int slot = CoopAlchemy.localAdd(found.get(0), finding instanceof LiquidMetal || finding instanceof MissileWeapon);
+					if (slot < 0) break;
+					detached = CoopAlchemy.bench(Dungeon.local())[slot];
+				} else if (finding instanceof LiquidMetal || finding instanceof MissileWeapon) {
 					detached = found.get(0).detachAll(inventory.backpack);
 				} else {
 					detached = found.get(0).detach(inventory.backpack);
@@ -860,8 +899,10 @@ public class AlchemyScene extends PixelScene {
 			for (int i = 0; i < inputs.length; i++) {
 				if (inputs[i] != null && inputs[i].item() != null) {
 					Item item = inputs[i].item();
-					if (!item.collect()) {
-						Dungeon.level.drop(item, Dungeon.hero.pos);
+					if (CoopAlchemy.active()){
+						CoopAlchemy.localRemove(i);
+					} else if (!item.collect()) {
+						Dungeon.level.drop(item, Dungeon.local().pos);
 					}
 					inputs[i].item(null);
 				}
@@ -872,6 +913,22 @@ public class AlchemyScene extends PixelScene {
 		if (alchGuide != null){
 			alchGuide.updateList();
 		}
+	}
+
+	private void createEnergyText(){
+		String energyText = Messages.get(AlchemyScene.class, "energy") + " " + Dungeon.energy;
+		if (toolkit != null){
+			energyText += "+" + toolkit.availableEnergy();
+		}
+		energyLeft.text(energyText);
+		energyLeft.setPos(
+				centerW - energyLeft.width()/2,
+				energyLeft.top()
+		);
+		energyIcon.x = energyLeft.left() - energyIcon.width();
+		align(energyIcon);
+		energyAdd.setPos(energyLeft.right(), energyAdd.top());
+		align(energyAdd);
 	}
 
 	public void createEnergy(){
@@ -999,8 +1056,10 @@ public class AlchemyScene extends PixelScene {
 					super.onClick();
 					Item item = InputButton.this.item;
 					if (item != null) {
-						if (!item.collect()) {
-							Dungeon.level.drop(item, Dungeon.hero.pos);
+						if (CoopAlchemy.active()){
+							CoopAlchemy.localRemove(inputIndex(InputButton.this));
+						} else if (!item.collect()) {
+							Dungeon.level.drop(item, Dungeon.local().pos);
 						}
 						InputButton.this.item(null);
 						updateState();

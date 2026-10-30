@@ -37,6 +37,7 @@ import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class RingOfElements extends Ring {
 
@@ -48,10 +49,10 @@ public class RingOfElements extends Ring {
 	public String statsInfo() {
 		if (isIdentified()){
 			String info = Messages.get(this, "stats",
-					Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, soloBuffedBonus()))));
+					Messages.decimalFormat("#.##", 100f * (1f - StrictMath.pow(0.825f, soloBuffedBonus()))));
 			if (isEquipped(Dungeon.hero) && soloBuffedBonus() != combinedBuffedBonus(Dungeon.hero)){
 				info += "\n\n" + Messages.get(this, "combined_stats",
-						Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, combinedBuffedBonus(Dungeon.hero)))));
+						Messages.decimalFormat("#.##", 100f * (1f - StrictMath.pow(0.825f, combinedBuffedBonus(Dungeon.hero)))));
 			}
 			return info;
 		} else {
@@ -61,7 +62,7 @@ public class RingOfElements extends Ring {
 
 	public String upgradeStat1(int level){
 		if (cursed && cursedKnown) level = Math.min(-1, level-3);
-		return Messages.decimalFormat("#.##", 100f * (1f - Math.pow(0.825f, level+1))) + "%";
+		return Messages.decimalFormat("#.##", 100f * (1f - StrictMath.pow(0.825f, level+1))) + "%";
 	}
 	
 	@Override
@@ -69,7 +70,7 @@ public class RingOfElements extends Ring {
 		return new Resistance();
 	}
 
-	public static final HashSet<Class> RESISTS = new HashSet<>();
+	public static final HashSet<Class> RESISTS = new LinkedHashSet<>();
 	static {
 		RESISTS.add( Burning.class );
 		RESISTS.add( Chill.class );
@@ -90,7 +91,7 @@ public class RingOfElements extends Ring {
 		
 		for (Class c : RESISTS){
 			if (c.isAssignableFrom(effect)){
-				return (float)Math.pow(0.825, getBuffedBonus(target, Resistance.class));
+				return (float)StrictMath.pow(0.825, getBuffedBonus(target, Resistance.class));
 			}
 		}
 		

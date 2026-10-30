@@ -66,6 +66,7 @@ import com.watabou.utils.Reflection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class SandalsOfNature extends Artifact {
 
@@ -86,7 +87,7 @@ public class SandalsOfNature extends Artifact {
 	public ArrayList<Class> seeds = new ArrayList<>();
 	public Class curSeedEffect = null;
 
-	private static final HashMap<Class<? extends Plant.Seed>, Integer> seedColors = new HashMap<>();
+	private static final HashMap<Class<? extends Plant.Seed>, Integer> seedColors = new LinkedHashMap<>();
 	static {
 		seedColors.put(Rotberry.Seed.class,     0xCC0022);
 		seedColors.put(Firebloom.Seed.class,    0xFF7F00);
@@ -102,7 +103,7 @@ public class SandalsOfNature extends Artifact {
 		seedColors.put(Blindweed.Seed.class,    0XD9D9D9);
 	}
 
-	private static final HashMap<Class<? extends Plant.Seed>, Integer> seedChargeReqs = new HashMap<>();
+	private static final HashMap<Class<? extends Plant.Seed>, Integer> seedChargeReqs = new LinkedHashMap<>();
 	static {
 		seedChargeReqs.put(Rotberry.Seed.class,     8);
 		seedChargeReqs.put(Firebloom.Seed.class,    20);

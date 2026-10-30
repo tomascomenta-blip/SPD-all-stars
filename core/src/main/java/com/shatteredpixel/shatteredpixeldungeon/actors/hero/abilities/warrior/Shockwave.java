@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopRules;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -112,7 +113,7 @@ public class Shockwave extends ArmorAbility {
 						for (int cell : cone.cells){
 
 							Char ch = Actor.findChar(cell);
-							if (ch != null && ch.alignment != hero.alignment){
+							if (ch != null && (ch.alignment != hero.alignment || CoopRules.friendlyTarget(hero, ch))){
 								int scalingStr = hero.STR()-10;
 								int damage = Hero.heroDamageIntRange(5 + scalingStr, 10 + 2*scalingStr);
 								damage = Math.round(damage * (1f + 0.2f*hero.pointsInTalent(Talent.SHOCK_FORCE)));

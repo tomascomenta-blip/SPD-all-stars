@@ -474,7 +474,7 @@ public class WndUpgrade extends Window {
 		btnCancel.setRect(btnUpgrade.right()+1, bottom+2*GAP, WIDTH/2f, 16);
 		add(btnCancel);
 
-		btnUpgrade.enable(Dungeon.hero.ready);
+		btnUpgrade.enable(Dungeon.local().ready);
 
 		btnUpgrade.icon(new ItemSprite(upgrader));
 		btnCancel.icon(Icons.EXIT.get());
@@ -488,7 +488,7 @@ public class WndUpgrade extends Window {
 	@Override
 	public synchronized void update() {
 		super.update();
-		if (!btnUpgrade.active && Dungeon.hero.ready){
+		if (!btnUpgrade.active && Dungeon.local().ready){
 			btnUpgrade.enable(true);
 		}
 	}

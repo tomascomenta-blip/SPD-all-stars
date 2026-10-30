@@ -28,8 +28,11 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barkskin;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.champions.ChampionHooks;
+import com.shatteredpixel.shatteredpixeldungeon.champions.botanist.BotanistHooks;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.LeafParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -57,6 +60,19 @@ public abstract class Plant implements Bundlable {
 
 	protected Class<? extends Plant.Seed> seedClass;
 
+	//botanico: index of the Botanist (in the party) who planted it, -1 if nobody did
+	public int botanist = -1;
+
+	//botanico: who gets the strong, harmless version of a plant (like a Warden): the Botanist always, and
+	//any hero of the party when the plant was planted by a Botanist
+	public boolean warden( Char ch ){
+		if (!(ch instanceof Hero)) return false;
+		Hero h = (Hero) ch;
+		return h.subClass == HeroSubClass.WARDEN
+				|| h.heroClass == HeroClass.BOTANIST
+				|| botanist >= 0;
+	}
+
 	public void trigger(){
 
 		Char ch = Actor.findChar(pos);
@@ -75,6 +91,10 @@ public abstract class Plant implements Bundlable {
 
 		wither();
 		activate( ch );
+		//botanico: plants of a Botanist hit his enemies harder
+		if (botanist >= 0 && ch != null && ch.alignment == Char.Alignment.ENEMY){
+			BotanistHooks.reinforce(this, ch);
+		}
 		Bestiary.setSeen(getClass());
 		Bestiary.countEncounter(getClass());
 	}
@@ -98,6 +118,9 @@ public abstract class Plant implements Bundlable {
 			}
 		}
 
+		//botanico: the plants of a Botanist may leave their seed
+		seedChance = Math.max(seedChance, BotanistHooks.seedChance(this));
+
 		if (Random.Float() < seedChance){
 			if (seedClass != null && seedClass != Rotberry.Seed.class) {
 				Dungeon.level.drop(Reflection.newInstance(seedClass), pos).sprite.drop();
@@ -107,15 +130,18 @@ public abstract class Plant implements Bundlable {
 	}
 	
 	private static final String POS	= "pos";
+	private static final String BOTANIST = "botanist";
 
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		pos = bundle.getInt( POS );
+		botanist = bundle.contains( BOTANIST ) ? bundle.getInt( BOTANIST ) : -1;
 	}
 
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		bundle.put( POS, pos );
+		if (botanist >= 0) bundle.put( BOTANIST, botanist );
 	}
 
 	public String name(){
@@ -159,7 +185,11 @@ public abstract class Plant implements Bundlable {
 				super.onThrow( cell );
 			} else {
 				Catalog.countUse(getClass());
-				Dungeon.level.plant( this, cell );
+				Plant planted = Dungeon.level.plant( this, cell );
+				//botanico: remember who planted it
+				if (planted != null && Dungeon.hero.heroClass == HeroClass.BOTANIST){
+					planted.botanist = ChampionHooks.indexOf(Dungeon.hero);
+				}
 				if (Dungeon.hero.subClass == HeroSubClass.WARDEN) {
 					for (int i : PathFinder.NEIGHBOURS8) {
 						int c = Dungeon.level.map[cell + i];

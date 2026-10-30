@@ -25,10 +25,12 @@ public class Delayer extends Tweener {
 	
 	public Delayer() {
 		super( null, 0 );
+		gameplayCallback = true;
 	}
 	
 	public Delayer( float time ) {
 		super( null, time );
+		gameplayCallback = true;
 	}
 
 	@Override

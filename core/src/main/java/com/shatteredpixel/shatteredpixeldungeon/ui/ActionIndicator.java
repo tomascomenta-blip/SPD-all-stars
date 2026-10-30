@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopOrders;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -122,7 +124,7 @@ public class ActionIndicator extends Tag {
 				needsRefresh = false;
 			}
 
-			if (!Dungeon.hero.ready) {
+			if (!Dungeon.local().ready) {
 				if (primaryVis != null) primaryVis.alpha(0.5f);
 				if (secondVis != null) secondVis.alpha(0.5f);
 			} else {
@@ -136,8 +138,8 @@ public class ActionIndicator extends Tag {
 	@Override
 	protected void onClick() {
 		super.onClick();
-		if (action != null && Dungeon.hero.ready) {
-			action.doAction();
+		if (action != null && Dungeon.local().ready) {
+			CoopOrders.doAction(action);
 		}
 	}
 
@@ -152,6 +154,8 @@ public class ActionIndicator extends Tag {
 	}
 
 	public static void setAction(Action action){
+		//cooperative runs: the other hero's buffs must not take over this device's button
+		if (!Party.ownedByLocal(action)) return;
 		synchronized (ActionIndicator.class) {
 			ActionIndicator.action = action;
 			refresh();

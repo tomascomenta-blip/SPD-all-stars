@@ -144,6 +144,29 @@ public class NoosaScript extends Script {
 		Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, Quad.SIZE * length, Gdx.gl20.GL_UNSIGNED_SHORT, Quad.SIZE * Short.SIZE/8 * offset );
 	}
 	
+	//quads [first, first+length) of a buffer that may hold more than the short indices reach:
+	//the attribute pointers move to each chunk so every draw starts again at index 0
+	public void drawQuadRange( Vertexbuffer buffer, int length, int first ){
+
+		if (length <= 0) {
+			return;
+		}
+
+		buffer.updateGLData();
+
+		buffer.bind();
+
+		int chunk = 16000;
+		for (int start = first; start < first + length; start += chunk){
+			int count = Math.min(chunk, first + length - start);
+			aXY.vertexBuffer( 2, 4, start * 16 );
+			aUV.vertexBuffer( 2, 4, start * 16 + 2 );
+			Gdx.gl20.glDrawElements( Gdx.gl20.GL_TRIANGLES, Quad.SIZE * count, Gdx.gl20.GL_UNSIGNED_SHORT, 0 );
+		}
+
+		buffer.release();
+	}
+
 	public void lighting( float rm, float gm, float bm, float am, float ra, float ga, float ba, float aa ) {
 		uColorM.value4f( rm, gm, bm, am );
 		uColorA.value4f( ra, ga, ba, aa );

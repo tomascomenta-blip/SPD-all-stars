@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.effects;
 
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.watabou.utils.Random;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.Image;
@@ -85,7 +86,7 @@ public class Chains extends Group {
 
 			killAndErase();
 			if (callback != null) {
-				callback.call();
+				Random.gameplay(callback);
 			}
 
 		} else {

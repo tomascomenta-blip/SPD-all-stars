@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.watabou.noosa.Game;
@@ -78,7 +79,11 @@ public class Swap extends Actor {
 			Dungeon.level.occupyCell(ch1 );
 			Dungeon.level.occupyCell(ch2 );
 
-			if (ch1 == Dungeon.hero || ch2 == Dungeon.hero) {
+			//cooperative runs: the shared vision must change on both devices, whoever's hero it is
+			boolean hero = Party.active()
+					? Party.isPartyHero(ch1) || Party.isPartyHero(ch2)
+					: ch1 == Dungeon.local() || ch2 == Dungeon.local();
+			if (hero) {
 				Dungeon.observe();
 				GameScene.updateFog();
 			}

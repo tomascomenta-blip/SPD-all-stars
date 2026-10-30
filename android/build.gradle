@@ -42,9 +42,13 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
+            //cooperative version: installed by hand, signed with the local debug key,
+            //and without Shattered's update checks and news feed (they point to the original game)
+            signingConfig signingConfigs.debug
+
             dependencies {
-                releaseImplementation project(':services:updates:githubUpdates')
-                releaseImplementation project(':services:news:shatteredNews')
+                releaseImplementation project(':services:updates:debugUpdates')
+                releaseImplementation project(':services:news:debugNews')
             }
         }
     }

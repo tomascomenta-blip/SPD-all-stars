@@ -479,6 +479,39 @@ public enum Icons {
 				return new ItemSprite(ItemSpriteSheet.RAPIER);
 			case CLERIC:
 				return new ItemSprite(ItemSpriteSheet.ARTIFACT_TOME);
+			case EXECUTIONER:
+				return new ItemSprite(ItemSpriteSheet.KIT_EXECUTIONER);
+			case SCOUT:
+				return new ItemSprite(ItemSpriteSheet.KIT_SCOUT);
+			case PYROMANCER:
+				return new ItemSprite(ItemSpriteSheet.KIT_PYROMANCER);
+			case JAILER:
+				return new ItemSprite(ItemSpriteSheet.KIT_JAILER);
+			case BRAWLER:
+				return new ItemSprite(ItemSpriteSheet.KIT_BRAWLER);
+			case GRAVEDIGGER:
+				return new ItemSprite(ItemSpriteSheet.KIT_GRAVEDIGGER);
+			case GUARDIAN:
+				return new ItemSprite(ItemSpriteSheet.KIT_GUARDIAN);
+			case BARD:
+				return new ItemSprite(ItemSpriteSheet.KIT_BARD);
+			//botanico
+			case BOTANIST:
+				return new ItemSprite(ItemSpriteSheet.KIT_BOTANIST);
+			//ornn
+			case FORGER:
+				return new ItemSprite(ItemSpriteSheet.KIT_FORGER);
+			//mordekaiser
+			case IRONLORD:
+				return new ItemSprite(ItemSpriteSheet.KIT_IRONLORD);
+			case AUTOMATON:
+				return new ItemSprite(ItemSpriteSheet.KIT_AUTOMATON);
+			case BEASTMASTER:
+				return new ItemSprite(ItemSpriteSheet.KIT_BEASTMASTER);
+			case SPIRITIST:
+				return new ItemSprite(ItemSpriteSheet.KIT_SPIRITIST);
+			case GUNSLINGER:
+				return new ItemSprite(ItemSpriteSheet.KIT_GUNSLINGER);
 			default:
 				return null;
 		}

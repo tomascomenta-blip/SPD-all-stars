@@ -35,6 +35,7 @@ import com.watabou.utils.Random;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class MiningLevelPainter extends CavesPainter {
 
@@ -119,7 +120,7 @@ public class MiningLevelPainter extends CavesPainter {
 
 	@Override
 	protected void paintDoors(Level l, ArrayList<Room> rooms) {
-		HashMap<Room, Room> roomMerges = new HashMap<>();
+		HashMap<Room, Room> roomMerges = new LinkedHashMap<>();
 
 		float hiddenDoorChance = 0.90f;
 

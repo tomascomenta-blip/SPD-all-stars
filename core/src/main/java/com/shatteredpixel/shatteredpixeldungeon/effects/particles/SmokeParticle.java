@@ -57,8 +57,8 @@ public class SmokeParticle extends PixelParticle {
 		this.x = x;
 		this.y = y;
 		
-		left = lifespan = Random.Float( 0.6f, 1f );
-		speed.set( Random.Float( -4, +4 ), Random.Float( -8, +8 ) );
+		left = lifespan = Random.Visual.Float( 0.6f, 1f );
+		speed.set( Random.Visual.Float( -4, +4 ), Random.Visual.Float( -8, +8 ) );
 	}
 	
 	public void resetSpew( float x, float y ) {
@@ -69,8 +69,8 @@ public class SmokeParticle extends PixelParticle {
 		
 		acc.set( -40, 40 );
 		
-		left = lifespan = Random.Float( 0.6f, 1f );
-		speed.polar( Random.Float(PointF.PI*1.7f, PointF.PI*1.8f), Random.Float( 30, 60 ));
+		left = lifespan = Random.Visual.Float( 0.6f, 1f );
+		speed.polar( Random.Visual.Float(PointF.PI*1.7f, PointF.PI*1.8f), Random.Visual.Float( 30, 60 ));
 	}
 	
 	@Override

@@ -30,6 +30,7 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.Reflection;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class Buff extends Actor {
 	
@@ -52,16 +53,16 @@ public class Buff extends Actor {
 	//whether a buff should persist through revive effects or similar (e.g. transmogrify)
 	public boolean revivePersists = false;
 	
-	protected HashSet<Class> resistances = new HashSet<>();
+	protected HashSet<Class> resistances = new LinkedHashSet<>();
 	
 	public HashSet<Class> resistances() {
-		return new HashSet<>(resistances);
+		return new LinkedHashSet<>(resistances);
 	}
 	
-	protected HashSet<Class> immunities = new HashSet<>();
+	protected HashSet<Class> immunities = new LinkedHashSet<>();
 	
 	public HashSet<Class> immunities() {
-		return new HashSet<>(immunities);
+		return new LinkedHashSet<>(immunities);
 	}
 	
 	public boolean attachTo( Char target ) {

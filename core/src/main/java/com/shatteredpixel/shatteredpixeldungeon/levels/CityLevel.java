@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.levels;
 
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.GolemQuest;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
@@ -190,7 +191,22 @@ public class CityLevel extends RegularLevel {
 
 	@Override
 	protected ArrayList<Room> initRooms() {
-		return Imp.Quest.spawn(super.initRooms());
+		return questRooms(super.initRooms());
+	}
+
+	//the room of the imp, and the vault of the great golem (the undersea world has its own quest instead)
+	protected ArrayList<Room> questRooms( ArrayList<Room> rooms ){
+		return GolemQuest.rooms(Imp.Quest.spawn(rooms));
+	}
+
+	@Override
+	protected void createMobs() {
+		placeQuests();
+		super.createMobs();
+	}
+
+	protected void placeQuests() {
+		GolemQuest.place(this, roomEntrance);
 	}
 	
 	@Override
@@ -236,6 +252,7 @@ public class CityLevel extends RegularLevel {
 	public Group addVisuals() {
 		super.addVisuals();
 		addCityVisuals( this, visuals );
+		if (GolemQuest.vault(this) != null) visuals.add(new GolemQuest.RuneVisuals());
 		return visuals;
 	}
 

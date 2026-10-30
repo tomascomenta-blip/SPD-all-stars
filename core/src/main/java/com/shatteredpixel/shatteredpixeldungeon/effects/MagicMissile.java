@@ -309,7 +309,7 @@ public class MagicMissile extends Emitter {
 			y += sy * d;
 			if ((time -= d) <= 0) {
 				on = false;
-				if (callback != null ) callback.call();
+				if (callback != null ) Random.gameplay(callback);
 			}
 		}
 	}
@@ -344,7 +344,7 @@ public class MagicMissile extends Emitter {
 			color( 0x88CCFF );
 			lifespan = 0.5f;
 			
-			speed.set( Random.Float( -10, +10 ), Random.Float( -10, +10 ) );
+			speed.set( Random.Visual.Float( -10, +10 ), Random.Visual.Float( -10, +10 ) );
 		}
 		
 		public void reset( float x, float y ) {
@@ -362,7 +362,7 @@ public class MagicMissile extends Emitter {
 			//size = 8;
 			left = lifespan;
 
-			speed.polar( Random.Float( PointF.PI2 ), Random.Float( 16, 32 ) );
+			speed.polar( Random.Visual.Float( PointF.PI2 ), Random.Visual.Float( 16, 32 ) );
 			this.x = x - speed.x * lifespan;
 			this.y = y - speed.y * lifespan;
 		}
@@ -415,25 +415,25 @@ public class MagicMissile extends Emitter {
 			left = lifespan;
 			size = 4;
 			
-			if (Random.Int(10) == 0){
+			if (Random.Visual.Int(10) == 0){
 				color(ColorMath.random(0xFFF266, 0x80771A));
 			} else {
 				color(ColorMath.random(0x805500, 0x332500));
 			}
 			
-			speed.set( Random.Float( -10, +10 ), Random.Float( -10, +10 ) );
+			speed.set( Random.Visual.Float( -10, +10 ), Random.Visual.Float( -10, +10 ) );
 		}
 		
 		public void resetBurst( float x, float y ){
 			reset(x, y);
 			
-			speed.polar( Random.Float( PointF.PI2 ), Random.Float( 40, 60 ) );
+			speed.polar( Random.Visual.Float( PointF.PI2 ), Random.Visual.Float( 40, 60 ) );
 		}
 		
 		public void resetAttract( float x, float y ){
 			reset(x, y);
 			
-			speed.polar( Random.Float( PointF.PI2 ), Random.Float( 24, 32 ) );
+			speed.polar( Random.Visual.Float( PointF.PI2 ), Random.Visual.Float( 24, 32 ) );
 			
 			this.x = x - speed.x * lifespan;
 			this.y = y - speed.y * lifespan;
@@ -498,7 +498,7 @@ public class MagicMissile extends Emitter {
 			this.endColor = endColor;
 			startColor = ColorMath.random(0x805500, 0x332500);
 			
-			speed.set( Random.Float( -10, +10 ), Random.Float( -10, +10 ) );
+			speed.set( Random.Visual.Float( -10, +10 ), Random.Visual.Float( -10, +10 ) );
 		}
 		
 		@Override
@@ -618,7 +618,7 @@ public class MagicMissile extends Emitter {
 			left = lifespan;
 			
 			acc.set( 0 );
-			speed.set( Random.Float( -20, +20 ), Random.Float( -20, +20 ) );
+			speed.set( Random.Visual.Float( -20, +20 ), Random.Visual.Float( -20, +20 ) );
 		}
 		
 		@Override
@@ -645,7 +645,7 @@ public class MagicMissile extends Emitter {
 		};
 
 		public void reset( int index, float x, float y ) {
-			super.reset( x, y, ColorMath.interpolate(0xFFCC99, 0xBB4411, Random.Float()), 8, 0.5f );
+			super.reset( x, y, ColorMath.interpolate(0xFFCC99, 0xBB4411, Random.Visual.Float()), 8, 0.5f );
 
 			speed.polar( PointF.PI2 / 8 * index, 12 );
 			this.x -= speed.x * lifespan;
@@ -705,7 +705,7 @@ public class MagicMissile extends Emitter {
 		public void resetUp( float x, float y){
 			reset(x, y);
 
-			speed.set( Random.Float( -8, +8 ), Random.Float( -32, -48 ) );
+			speed.set( Random.Visual.Float( -8, +8 ), Random.Visual.Float( -32, -48 ) );
 		}
 		
 		@Override

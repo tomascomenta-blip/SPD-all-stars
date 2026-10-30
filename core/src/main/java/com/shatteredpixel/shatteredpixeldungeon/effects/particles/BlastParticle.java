@@ -52,10 +52,10 @@ public class BlastParticle extends PixelParticle.Shrinking {
 		this.x = x;
 		this.y = y;
 		
-		left = lifespan = Random.Float();
+		left = lifespan = Random.Visual.Float();
 		
 		size = 8;
-		speed.polar( -Random.Float( 3.1415926f ), Random.Float( 32, 64 ) );
+		speed.polar( -Random.Visual.Float( 3.1415926f ), Random.Visual.Float( 32, 64 ) );
 	}
 	
 	@Override

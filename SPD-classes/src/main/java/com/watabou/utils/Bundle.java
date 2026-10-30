@@ -79,6 +79,17 @@ public class Bundle {
 		this.data = data;
 	}
 
+	//parses the text produced by toString(), null if it is not a valid bundle
+	public static Bundle fromString( String json ) {
+		try {
+			Object o = new JSONTokener(json).nextValue();
+			if (o instanceof JSONObject) return new Bundle((JSONObject) o);
+		} catch (Exception e) {
+			//fall through
+		}
+		return null;
+	}
+
 	public boolean isNull() {
 		return data == null;
 	}
@@ -503,7 +514,7 @@ public class Bundle {
 			}
 
 			//JSONTokenizer only has a string-based constructor on Android/iOS
-			BufferedReader reader = new BufferedReader( new InputStreamReader( stream ));
+			BufferedReader reader = new BufferedReader( new InputStreamReader( stream, java.nio.charset.StandardCharsets.UTF_8 ));
 			StringBuilder jsonBuilder = new StringBuilder();
 
 			String line;
@@ -539,8 +550,8 @@ public class Bundle {
 	public static boolean write( Bundle bundle, OutputStream stream, boolean compressed ) {
 		try {
 			BufferedWriter writer;
-			if (compressed) writer = new BufferedWriter( new OutputStreamWriter( new GZIPOutputStream(stream, GZIP_BUFFER ) ) );
-			else writer = new BufferedWriter( new OutputStreamWriter( stream ) );
+			if (compressed) writer = new BufferedWriter( new OutputStreamWriter( new GZIPOutputStream(stream, GZIP_BUFFER ), java.nio.charset.StandardCharsets.UTF_8 ) );
+			else writer = new BufferedWriter( new OutputStreamWriter( stream, java.nio.charset.StandardCharsets.UTF_8 ) );
 
 			//JSONObject.write does not exist on Android/iOS
 			writer.write(bundle.data.toString());

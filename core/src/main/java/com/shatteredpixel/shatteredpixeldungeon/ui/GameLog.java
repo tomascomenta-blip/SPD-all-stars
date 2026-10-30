@@ -60,6 +60,7 @@ public class GameLog extends Component implements Signal.Listener<String> {
 				for (String text : textsToAdd){
 					if (length != entries.size()){
 						clear();
+						lastEntry = null;
 						recreateLines();
 					}
 
@@ -86,7 +87,7 @@ public class GameLog extends Component implements Signal.Listener<String> {
 						color = CharSprite.NEUTRAL;
 					}
 
-					if (lastEntry != null && color == lastColor && lastEntry.nLines < maxLines) {
+					if (lastEntry != null && color == lastColor && lastEntry.nLines < maxLines && !entries.isEmpty()) {
 
 						String lastMessage = lastEntry.text();
 						lastEntry.text( lastMessage.length() == 0 ? text : lastMessage + " " + text );

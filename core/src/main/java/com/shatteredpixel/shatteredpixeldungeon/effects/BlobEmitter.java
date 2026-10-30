@@ -64,8 +64,8 @@ public class BlobEmitter extends Emitter {
 					visible = visible || Dungeon.level.mapped[cell] || Dungeon.level.visited[cell];
 				}
 				if (visible && map[cell] > 0) {
-					float x = (i + Random.Float(bound.left, bound.right)) * size;
-					float y = (j + Random.Float(bound.top, bound.bottom)) * size;
+					float x = (i + Random.Visual.Float(bound.left, bound.right)) * size;
+					float y = (j + Random.Visual.Float(bound.top, bound.bottom)) * size;
 					factory.emit(this, index, x, y);
 				}
 			}

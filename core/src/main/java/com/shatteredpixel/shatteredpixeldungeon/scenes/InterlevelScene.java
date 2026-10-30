@@ -21,6 +21,13 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.shatteredpixel.shatteredpixeldungeon.DevFlags;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopAuto;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.ColossusPreview;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.Continent;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.world.EdgeTransition;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.ThalFinale;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -42,6 +49,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.features.Chasm;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKWorlds;
 import com.shatteredpixel.shatteredpixeldungeon.ui.GameLog;
 import com.shatteredpixel.shatteredpixeldungeon.ui.IconButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
@@ -79,7 +87,8 @@ public class InterlevelScene extends PixelScene {
 	private static float fadeTime;
 	
 	public enum Mode {
-		DESCEND, ASCEND, CONTINUE, RESURRECT, RETURN, FALL, RESET, NONE
+		DESCEND, ASCEND, CONTINUE, RESURRECT, RETURN, FALL, RESET, NONE,
+		COOP_SYNC //cooperative runs: load the state shared by the host
 	}
 	public static Mode mode;
 
@@ -106,6 +115,10 @@ public class InterlevelScene extends PixelScene {
 	private IconButton btnHideStory;
 	
 	private static Thread thread;
+
+	public static boolean onLoadingThread(){
+		return thread != null && Thread.currentThread() == thread;
+	}
 	private static Exception error = null;
 	private float waitingTime;
 
@@ -161,6 +174,9 @@ public class InterlevelScene extends PixelScene {
 			case RETURN:
 				loadingDepth = returnDepth;
 				break;
+			case COOP_SYNC:
+				loadingDepth = Math.max(1, Dungeon.depth);
+				break;
 		}
 
 		//flush the texture cache whenever moving between regions, helps reduce memory load
@@ -174,8 +190,18 @@ public class InterlevelScene extends PixelScene {
 		int loadingCenter = 400;
 
 		//for portrait users, each run the splashes change what details they focus on
+		//an alt world shows its own painting (only known once the run is loaded)
+		String worldSplash = null;
+		if (mode == Mode.DESCEND && Dungeon.hero == null){
+			worldSplash = SKWorlds.splashForNewRun( Dungeon.seed );
+		} else if (Dungeon.hero != null && mode != Mode.CONTINUE && mode != Mode.COOP_SYNC){
+			worldSplash = SKWorlds.splash( loadingDepth );
+		}
 		Random.pushGenerator(seed+lastRegion);
-			switch (lastRegion){
+			switch (worldSplash != null ? -1 : lastRegion){
+				case -1:
+					loadingAsset = worldSplash;
+					break;
 				case 1:
 					loadingAsset = Assets.Splashes.SEWERS;
 					switch (Random.Int(2)){
@@ -276,9 +302,12 @@ public class InterlevelScene extends PixelScene {
 		align(loadingText);
 		add(loadingText);
 
-		if (mode == Mode.DESCEND && lastRegion <= 5 && !DeviceCompat.isDebug()){
+		if (mode == Mode.DESCEND && lastRegion <= 5 && !DeviceCompat.isDebug() && !CoopSession.active()
+				&& DevFlags.start() == null){
 			if (Dungeon.hero == null || (loadingDepth > Statistics.deepestFloor && loadingDepth % 5 == 1)){
-					storyMessage = PixelScene.renderTextBlock(Document.INTROS.pageBody(region), 6);
+					//an alt world tells its own story
+					String worldIntro = SKWorlds.intro( worldSplash );
+					storyMessage = PixelScene.renderTextBlock(worldIntro != null ? worldIntro : Document.INTROS.pageBody(region), 6);
 					storyMessage.maxWidth( PixelScene.landscape() ? 180 : 125);
 					storyMessage.setPos(insets.left+(w-storyMessage.width())/2f, insets.top+(h-storyMessage.height())/2f);
 
@@ -419,7 +448,9 @@ public class InterlevelScene extends PixelScene {
 
 						Actor.fixTime();
 
-						switch (mode) {
+						if (CoopSession.active()) {
+							coopLoad();
+						} else switch (mode) {
 							case DESCEND:
 								descend();
 								break;
@@ -428,6 +459,7 @@ public class InterlevelScene extends PixelScene {
 								break;
 							case CONTINUE:
 								restore();
+								if (ThalFinale.rewinding) ThalFinale.afterRewind();
 								break;
 							case RESURRECT:
 								resurrect();
@@ -560,7 +592,8 @@ public class InterlevelScene extends PixelScene {
 			if (error != null) {
 				String errorMsg;
 				if (error instanceof FileNotFoundException)     errorMsg = Messages.get(this, "file_not_found");
-				else if (error instanceof IOException)          errorMsg = Messages.get(this, "io_error");
+				else if (error instanceof IOException)          errorMsg = CoopSession.current != null && CoopSession.current.problem != null
+						? CoopSession.current.problem : Messages.get(this, "io_error");
 				else if (error.getMessage() != null &&
 						error.getMessage().equals("old save")) errorMsg = Messages.get(this, "io_error");
 
@@ -619,12 +652,58 @@ public class InterlevelScene extends PixelScene {
 
 	}
 
+	//cooperative runs: only the host builds levels. It does the usual work and then shares the
+	//resulting state; the guest just waits for that state. Both then load the same save.
+	private void coopLoad() throws IOException {
+		CoopSession s = CoopSession.current;
+		if (s.isHost()){
+			switch (mode) {
+				case DESCEND:   descend();  break;
+				case ASCEND:    ascend();   break;
+				case CONTINUE:
+					restore();
+					if (ThalFinale.rewinding) ThalFinale.afterRewind();
+					else s.prepareResumed();
+					break;
+				case RESURRECT: resurrect(); break;
+				case RETURN:    returnTo(); break;
+				case FALL:      fall();     break;
+				case RESET:     reset();    break;
+				default:        break; //COOP_SYNC: share the current state as it is
+			}
+			if (mode == Mode.DESCEND || mode == Mode.FALL) CoopAuto.carveTestChasm();
+			s.hostShareState();
+		} else {
+			s.guestLoadState();
+			ThalFinale.rewinding = false;
+		}
+	}
+
 	private void descend() throws IOException {
 
 		if (Dungeon.hero == null) {
 			Mob.clearHeldAllies();
 			Dungeon.init();
+			if (CoopSession.current != null && CoopSession.current.isHost()){
+				CoopSession.current.setupNewParty();
+			}
 			GameLog.wipe();
+			if (CoopSession.current == null) CoopAuto.newSoloRun();
+			//testing solo runs: -Dspd.test.startdepth=N starts at depth N
+			if (CoopSession.current == null && DevFlags.start() != null
+					&& DevFlags.startDepth() > 1){
+				Dungeon.depth = DevFlags.startDepth();
+			}
+			if (CoopSession.current == null && DevFlags.start() != null) Continent.testStart();
+			//testing: -Dspd.test.pyre=1 starts in the arena of the walking pyre (solo, or the host of a co-op run)
+			if (DevFlags.pyre()){
+				Dungeon.depth = 25;
+				Dungeon.branch = Continent.ASH;
+			}
+			if (ColossusPreview.on()){
+				Dungeon.depth = 21;
+				Dungeon.branch = Continent.ASH;
+			}
 
 			//When debugging, we may start a game at a later depth to quickly test something
 			// if this happens, the games quickly generates all prior levels on branch 0 first,
@@ -647,7 +726,7 @@ public class InterlevelScene extends PixelScene {
 			Level level = Dungeon.newLevel();
 			Dungeon.switchLevel( level, -1 );
 		} else {
-			if (curTransition.destBranch != Dungeon.branch && Dungeon.depth >= 16 && Dungeon.depth <= 20) {
+			if (curTransition.destBranch != Dungeon.branch && curTransition.destBranch != 2 && Dungeon.branch != 2 && Dungeon.depth >= 16 && Dungeon.depth <= 20) {
 				//FIXME avoids holding allies when entering city quest area, this is very sloppy though
 				// perhaps holding allies could be a property of the transition?
 			} else {
@@ -666,8 +745,10 @@ public class InterlevelScene extends PixelScene {
 			}
 
 			LevelTransition destTransition = level.getTransition(curTransition.destType);
+			//across the edge of a biome: on the other side, as far along the edge as they were
+			int arrival = EdgeTransition.arrival(curTransition, level, destTransition.cell());
 			curTransition = null;
-			Dungeon.switchLevel( level, destTransition.cell() );
+			Dungeon.switchLevel( level, arrival );
 		}
 
 	}
@@ -691,7 +772,7 @@ public class InterlevelScene extends PixelScene {
 	}
 
 	private void ascend() throws IOException {
-		if (curTransition.destBranch != Dungeon.branch && Dungeon.depth >= 16 && Dungeon.depth <= 20) {
+		if (curTransition.destBranch != Dungeon.branch && curTransition.destBranch != 2 && Dungeon.branch != 2 && Dungeon.depth >= 16 && Dungeon.depth <= 20) {
 			//FIXME avoids holding allies when entering city quest area, this is very sloppy though
 			// perhaps holding allies could be a property of the transition?
 		} else {
@@ -710,8 +791,9 @@ public class InterlevelScene extends PixelScene {
 		}
 
 		LevelTransition destTransition = level.getTransition(curTransition.destType);
+		int arrival = EdgeTransition.arrival(curTransition, level, destTransition.cell());
 		curTransition = null;
-		Dungeon.switchLevel( level, destTransition.cell() );
+		Dungeon.switchLevel( level, arrival );
 	}
 	
 	private void returnTo() throws IOException {

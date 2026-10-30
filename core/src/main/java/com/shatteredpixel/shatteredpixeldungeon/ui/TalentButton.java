@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopOrders;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
@@ -68,7 +69,8 @@ public class TalentButton extends Button {
 
 		this.tier = tier;
 		this.talent = talent;
-		this.pointsInTalent = points;
+		//cooperative runs: upgrades waiting for this player's turn already show
+		this.pointsInTalent = points + (mode == Mode.UPGRADE ? CoopOrders.pendingPoints(talent) : 0);
 		this.mode = mode;
 
 		bg.frame(20*(talent.maxPoints()-1), 0, WIDTH, HEIGHT);
@@ -113,10 +115,10 @@ public class TalentButton extends Button {
 
 		Window toAdd;
 		if (mode == Mode.UPGRADE
-				&& Dungeon.hero != null
-				&& Dungeon.hero.isAlive()
-				&& Dungeon.hero.talentPointsAvailable(tier) > 0
-				&& Dungeon.hero.pointsInTalent(talent) < talent.maxPoints()){
+				&& Dungeon.local() != null
+				&& Dungeon.local().isAlive()
+				&& CoopOrders.talentPointsAvailable(Dungeon.local(), tier) > 0
+				&& CoopOrders.pointsInTalent(Dungeon.local(), talent) < talent.maxPoints()){
 			toAdd = new WndInfoTalent(talent, pointsInTalent, new WndInfoTalent.TalentButtonCallback() {
 
 				@Override
@@ -130,6 +132,7 @@ public class TalentButton extends Button {
 					Statistics.qualifiedForRandomVictoryBadge = false;
 				}
 			});
+		//metamorphosis windows come from game logic (shared in cooperative runs): the hero in context
 		} else if (mode == Mode.METAMORPH_CHOOSE && Dungeon.hero != null && Dungeon.hero.isAlive()) {
 			toAdd = new WndInfoTalent(talent, pointsInTalent, new WndInfoTalent.TalentButtonCallback() {
 
@@ -247,8 +250,9 @@ public class TalentButton extends Button {
 	}
 
 	public void upgradeTalent(){
-		if (Dungeon.hero.talentPointsAvailable(tier) > 0 && parent != null) {
-			Dungeon.hero.upgradeTalent(talent);
+		//cooperative runs: the upgrade may wait for this player's turn, but is never lost or repeated
+		if (CoopOrders.talentPointsAvailable(Dungeon.local(), tier) > 0 && parent != null
+				&& CoopOrders.upgradeTalent(talent, null)) {
 			float oldWidth = fill.width();
 			pointsInTalent++;
 			layout();

@@ -47,6 +47,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TenguDartTrap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.rift.RiftBosses;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.ui.TargetHealthIndicator;
@@ -406,6 +407,13 @@ public class PrisonBossLevel extends Level {
 	}
 	
 	public void progress(){
+		progressPhase();
+		//cooperative runs: after a phase change nobody is left outside the fight or inside a wall
+		gatherParty();
+		regroupParty(false);
+	}
+
+	private void progressPhase(){
 		switch (state){
 			case START:
 				
@@ -499,6 +507,8 @@ public class PrisonBossLevel extends Level {
 				tengu.pos = (arena.left + arena.width()/2) + width()*(arena.top+2);
 				GameScene.add( tengu, 1 );
 				tengu.notice();
+				//cooperative runs: the Rift Herald joins Tengu in the final arena
+				RiftBosses.spawn( this, tengu );
 
 				CellEmitter.get( tengu.pos ).burst( Speck.factory( Speck.WOOL ), 6 );
 				

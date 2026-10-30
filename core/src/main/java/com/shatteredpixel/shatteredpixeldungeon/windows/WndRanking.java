@@ -111,7 +111,7 @@ public class WndRanking extends WndTabbed {
 	
 	private void createControls() {
 
-		if (Dungeon.hero != null) {
+		if (Dungeon.local() != null) {
 			Icons[] icons =
 					{Icons.RANKINGS, Icons.TALENT, Icons.BACKPACK_LRG, Icons.BADGES, Icons.CHALLENGE_COLOR};
 			Group[] pages =
@@ -167,8 +167,8 @@ public class WndRanking extends WndTabbed {
 			super();
 			
 			String heroClass = record.heroClass.name();
-			if (Dungeon.hero != null){
-				heroClass = Dungeon.hero.className();
+			if (Dungeon.local() != null){
+				heroClass = Dungeon.local().className();
 			}
 			
 			IconTitle title = new IconTitle();
@@ -178,7 +178,7 @@ public class WndRanking extends WndTabbed {
 			title.setRect( 0, 0, WIDTH, 0 );
 			add( title );
 
-			if (Dungeon.hero != null && Dungeon.seed != -1){
+			if (Dungeon.local() != null && Dungeon.seed != -1){
 				GAP--;
 			}
 			
@@ -198,7 +198,7 @@ public class WndRanking extends WndTabbed {
 
 			NumberFormat num = NumberFormat.getInstance(Messages.locale());
 
-			if (Dungeon.hero == null){
+			if (Dungeon.local() == null){
 				pos = statSlot( this, Messages.get(this, "score"), num.format( record.score ), pos );
 				pos += GAP;
 
@@ -228,13 +228,13 @@ public class WndRanking extends WndTabbed {
 
 				pos += GAP;
 
-				int strBonus = Dungeon.hero.STR() - Dungeon.hero.STR;
+				int strBonus = Dungeon.local().STR() - Dungeon.local().STR;
 				if (strBonus > 0)
-					pos = statSlot(this, Messages.get(this, "str"), Dungeon.hero.STR + " + " + strBonus, pos);
+					pos = statSlot(this, Messages.get(this, "str"), Dungeon.local().STR + " + " + strBonus, pos);
 				else if (strBonus < 0)
-					pos = statSlot(this, Messages.get(this, "str"), Dungeon.hero.STR + " - " + -strBonus, pos);
+					pos = statSlot(this, Messages.get(this, "str"), Dungeon.local().STR + " - " + -strBonus, pos);
 				else
-					pos = statSlot(this, Messages.get(this, "str"), Integer.toString(Dungeon.hero.STR), pos);
+					pos = statSlot(this, Messages.get(this, "str"), Integer.toString(Dungeon.local().STR), pos);
 				pos = statSlot(this, Messages.get(this, "duration"), num.format((int) Statistics.duration), pos);
 				if (Statistics.highestAscent == 0) {
 					pos = statSlot(this, Messages.get(this, "depth"), num.format(Statistics.deepestFloor), pos);
@@ -267,7 +267,7 @@ public class WndRanking extends WndTabbed {
 
 			int buttontop = HEIGHT - 16;
 
-			if (Dungeon.hero != null && Dungeon.seed != -1 && !Dungeon.daily &&
+			if (Dungeon.local() != null && Dungeon.seed != -1 && !Dungeon.daily &&
 					(DeviceCompat.isDebug() || Badges.isUnlocked(Badges.Badge.VICTORY))){
 				final Image icon = Icons.get(Icons.SEED);
 				RedButton btnSeed = new RedButton(Messages.get(this, "copy_seed")){
@@ -333,11 +333,13 @@ public class WndRanking extends WndTabbed {
 			camera = WndRanking.this.camera;
 
 			int tiers = 1;
-			if (Dungeon.hero.lvl >= 6) tiers++;
-			if (Dungeon.hero.lvl >= 12 && Dungeon.hero.subClass != HeroSubClass.NONE) tiers++;
-			if (Dungeon.hero.lvl >= 20 && Dungeon.hero.armorAbility != null) tiers++;
-			while (Dungeon.hero.talents.size() > tiers){
-				Dungeon.hero.talents.remove(Dungeon.hero.talents.size()-1);
+			if (Dungeon.local().lvl >= 6) tiers++;
+			if (Dungeon.local().lvl >= 12 && Dungeon.local().subClass != HeroSubClass.NONE) tiers++;
+			if (Dungeon.local().lvl >= 20 && Dungeon.local().armorAbility != null) tiers++;
+			//the 5th row, past level 30 with a path of the heart of Thal-Vekhorr
+			if (Dungeon.local().lvl >= 30 && Dungeon.local().specialization != null) tiers = 5;
+			while (Dungeon.local().talents.size() > tiers){
+				Dungeon.local().talents.remove(Dungeon.local().talents.size()-1);
 			}
 
 			TalentsPane p = new TalentsPane(TalentButton.Mode.INFO);
@@ -357,7 +359,7 @@ public class WndRanking extends WndTabbed {
 		public ItemsTab() {
 			super();
 			
-			Belongings stuff = Dungeon.hero.belongings;
+			Belongings stuff = Dungeon.local().belongings;
 			if (stuff.weapon != null) {
 				addItem( stuff.weapon );
 			}
@@ -410,13 +412,13 @@ public class WndRanking extends WndTabbed {
 				}
 			}
 
-			EscapeCrystal crystal = Dungeon.hero.belongings.getItem(EscapeCrystal.class);
+			EscapeCrystal crystal = Dungeon.local().belongings.getItem(EscapeCrystal.class);
 			if (crystal != null){
 				IconButton vaultInv = new IconButton(new ItemSprite(ItemSpriteSheet.ESCAPE)){
 					@Override
 					protected void onClick() {
 						Bundle items = crystal.storedItems;
-						crystal.restoreHeroBelongings(Dungeon.hero, null);
+						crystal.restoreHeroBelongings(Dungeon.local(), null);
 						crystal.storedItems = items; //want to preserve this
 						ShatteredPixelDungeon.scene().addToFront(new WndVaultItems());
 					}

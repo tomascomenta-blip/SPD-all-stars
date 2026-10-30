@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ExitButton;
@@ -64,6 +65,21 @@ public class AboutScene extends PixelScene {
 		Component content = list.content();
 		content.clear();
 
+		//*** All-Stars Pixel Dungeon Credits ***
+
+		final int ALLSTARS_COLOR = 0xFFE89A;
+		CreditsBlock allStars = new CreditsBlock(true, ALLSTARS_COLOR,
+				"All-Stars Pixel Dungeon",
+				new Image(Assets.Interfaces.GAME_ICON),
+				"Developed by: _tomascomenta_\nA mod of Shattered Pixel Dungeon",
+				"github.com/tomascomenta-blip",
+				"https://github.com/tomascomenta-blip/SPD-all-stars");
+		allStars.setRect((w - colWidth)/2f, insets.top + 6, colWidth, 0);
+		content.add(allStars);
+
+		float top = allStars.bottom() + 8;
+		addLine(top - 4, content);
+
 		//*** Shattered Pixel Dungeon Credits ***
 
 		CreditsBlock shpx = new CreditsBlock(true, Window.SHPX_COLOR,
@@ -73,9 +89,9 @@ public class AboutScene extends PixelScene {
 				"ShatteredPixel.com",
 				"https://ShatteredPixel.com");
 		if (landscape()){
-			shpx.setRect((w - fullWidth)/2f - 6, insets.top + 26, 120, 0);
+			shpx.setRect((w - fullWidth)/2f - 6, top + 20, 120, 0);
 		} else {
-			shpx.setRect((w - fullWidth)/2f, insets.top + 6, 120, 0);
+			shpx.setRect((w - fullWidth)/2f, top, 120, 0);
 		}
 		content.add(shpx);
 
@@ -87,7 +103,7 @@ public class AboutScene extends PixelScene {
 				"https://www.alekskomitov.com/");
 		aleks.setSize(colWidth/2f, 0);
 		if (landscape()){
-			aleks.setPos(shpx.right(), insets.top+6);
+			aleks.setPos(shpx.right(), top);
 		} else {
 			aleks.setPos(w/2f - colWidth/2f, shpx.bottom()+6);
 		}

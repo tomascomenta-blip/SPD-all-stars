@@ -1,27 +1,53 @@
-# Shattered Pixel Dungeon
+# All-Stars Pixel Dungeon
 
-[Shattered Pixel Dungeon](https://shatteredpixel.com/shatteredpd/) is an open-source traditional roguelike dungeon crawler with randomized levels and enemies, and hundreds of items to collect and use. It's based on the [source code of Pixel Dungeon](https://github.com/00-Evan/pixel-dungeon-gradle), by [Watabou](https://watabou.itch.io/).
+A mod of [Shattered Pixel Dungeon](https://github.com/00-Evan/shattered-pixel-dungeon) 4.0.2. It adds online co-op for 2 to 8 players, new heroes, alternate versions of the five regions and, past the usual ending, an open world to survive in.
 
-Shattered Pixel Dungeon currently compiles for Android, iOS, and Desktop platforms. You can find official releases of the game on:
+It has its own app id and save folder, so it installs next to Shattered without touching your runs there.
 
-[![Get it on Google Play](https://shatteredpixel.com/assets/images/badges/gplay.png)](https://play.google.com/store/apps/details?id=com.shatteredpixel.shatteredpixeldungeon)
-[![Download on the App Store](https://shatteredpixel.com/assets/images/badges/appstore.png)](https://apps.apple.com/app/shattered-pixel-dungeon/id1563121109)
-[![Steam](https://shatteredpixel.com/assets/images/badges/steam.png)](https://store.steampowered.com/app/1769170/Shattered_Pixel_Dungeon/)<br>
-[![GOG.com](https://shatteredpixel.com/assets/images/badges/gog.png)](https://www.gog.com/game/shattered_pixel_dungeon)
-[![Itch.io](https://shatteredpixel.com/assets/images/badges/itch.png)](https://shattered-pixel.itch.io/shattered-pixel-dungeon)
-[![Github Releases](https://shatteredpixel.com/assets/images/badges/github.png)](https://github.com/00-Evan/shattered-pixel-dungeon/releases)
+## What's different from Shattered
 
-If you like this game, please consider [supporting me on Patreon](https://www.patreon.com/ShatteredPixel)!
+**Co-op.** Up to 8 players, either on the same Wi-Fi (games show up on their own) or over the internet with a 5-letter room code. Everyone plays in the same turn order; if two devices ever disagree, the host sends its game to the others and play goes on. The party takes the stairs together, a fallen hero comes back on the next floor, and a run only ends when everybody is down. Strength potions and upgrade scrolls drop once per player. Solo runs work as usual.
 
-There is an official blog for this project at [ShatteredPixel.com](https://www.shatteredpixel.com/blog/).
+**Heroes.** 15 new heroes. Each carries an item that opens an ability window with four abilities (the last one from level 6), and has its own talents, subclasses and armor ability.
 
-The game also has a translation project hosted on [Transifex](https://explore.transifex.com/shattered-pixel/shattered-pixel-dungeon/).
+**Alternate worlds.** Any region can roll as the Forest, the Kingdom, the Starship, the Undersea or the Forgotten Land instead, with its own terrain, enemies and boss. How often that happens, and how hard they are, is set in "Difficulty and worlds" when you start a run. Each region also has a quest with a mini-boss; finishing it or failing it changes the boss fight at the end.
 
-Note that **this repository does not accept pull requests!** The code here is provided in hopes that others may find it useful for their own projects, not to allow community contribution. Issue reports of all kinds (bug reports, feature requests, etc.) are welcome.
+**The Rift.** In co-op runs, a guest from the Rift joins some boss fights: the Rift Crawler with Tengu, the Crimson Ancestor with DM-300, the Primeval Dragon on floor 20 and the Pit Worm on floor 25.
 
-If you'd like to work with the code, you can find the following guides in `/docs`:
-- [Compiling for Android.](docs/getting-started-android.md)
-    - **[If you plan to distribute on Google Play please read the end of this guide.](docs/getting-started-android.md#distributing-your-app)**
-- [Compiling for desktop platforms.](docs/getting-started-desktop.md)
-- [Compiling for iOS.](docs/getting-started-ios.md)
-- [Recommended changes for making your own version.](docs/recommended-changes.md)
+**Thal-Vekhorr.** If all five regions of a run were alternate worlds, a secret final boss waits on the way back to the surface.
+
+**The Dark Continent.** Beating Thal-Vekhorr opens a portal (in co-op the party votes on it). Behind it is an open world of six biomes: the Ash Plains, the Flesh Forest, the Devoured City, the Frozen Moor, the Graveyard of Colossi and the Black Isles, each with its depths and its abyss. Most of what lives there is far bigger than you, up to colossi that fill a 15×15 area. You can climb them, knock them down, tame one per party, eat their parts to mutate, and forge their remains into gear. Darkness, corruption, campfires and a sacred torch decide how long you last, and gathering seven drops of essence leads to the true ending.
+
+**Smaller things.** An optional damage cap per hit ("Anti-OP") for groups that find a build too strong, a menu with saved co-op runs and run options, friendly fire, map marks and an end-of-run scoreboard.
+
+## Known gaps
+
+- The splash art of the new heroes and worlds is still a placeholder (a question mark).
+- New text is in English and Spanish only. With another language selected, the new content shows in English.
+- The iOS project is untouched from Shattered and has not been built or tested.
+
+## Download
+
+Android and Windows builds are on the [releases page](../../releases). Everyone in a co-op game needs the same version.
+
+Internet games go through a public MQTT broker (HiveMQ, over TLS). Anyone with your room code can join, so don't share it around.
+
+## Building
+
+Same as Shattered: see the guides for [desktop](docs/getting-started-desktop.md) and [Android](docs/getting-started-android.md). I build with JDK 21.
+
+- `./gradlew desktop:debug` runs the game on PC.
+- `./gradlew desktop:jpackageImage` makes the Windows folder with its own Java.
+- `./gradlew android:assembleRelease` makes the APK.
+
+## Credits and license
+
+All-Stars Pixel Dungeon is made by tomascomenta. Shattered Pixel Dungeon is made by Evan Debenham, based on Pixel Dungeon by Oleg Dolya (Watabou). This is an unofficial mod; it isn't made or supported by them, so please don't send them bug reports about it.
+
+GPLv3 like the original, see [LICENSE.txt](LICENSE.txt).
+
+## En español
+
+Mod de Shattered Pixel Dungeon 4.0.2 con cooperativo en línea de 2 a 8 jugadores (misma Wi-Fi o por internet con un código de 5 letras), 15 héroes nuevos, versiones alternativas de las cinco regiones con sus propios enemigos y jefes, una misión con minijefe en cada región, los invitados de la Grieta en las partidas cooperativas, un jefe final secreto y, después, el Continente oscuro: un mundo abierto de seis biomas lleno de colosos.
+
+Se instala aparte de Shattered, con sus propias partidas guardadas. Las descargas para Android y Windows están en la página de releases; todos los jugadores de una partida necesitan la misma versión. Los textos nuevos están en inglés y en español.

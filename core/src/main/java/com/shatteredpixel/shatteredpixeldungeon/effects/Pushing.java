@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
+import com.watabou.utils.Random;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Visual;
@@ -54,7 +55,7 @@ public class Pushing extends Actor {
 		this.to = to;
 		this.callback = null;
 
-		if (ch == Dungeon.hero){
+		if (ch == Dungeon.local()){
 			Camera.main.panFollow(ch.sprite, 20f);
 		}
 	}
@@ -135,7 +136,7 @@ public class Pushing extends Actor {
 				
 				killAndErase();
 				Actor.remove(Pushing.this);
-				if (callback != null) callback.call();
+				if (callback != null) Random.gameplay(callback);
 				GameScene.sortMobSprites();
 
 				next();

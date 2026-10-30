@@ -21,6 +21,8 @@
 
 package com.watabou.noosa.tweeners;
 
+import com.watabou.utils.Random;
+
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Gizmo;
 
@@ -45,7 +47,7 @@ abstract public class Tweener extends Gizmo {
 	@Override
 	public void update() {
 		if (elapsed < 0){
-			onComplete();
+			complete();
 			kill();
 			return;
 		}
@@ -59,7 +61,7 @@ abstract public class Tweener extends Gizmo {
 		
 		if (elapsed >= interval) {
 			updateValues( 1 );
-			onComplete();
+			complete();
 			kill();
 		} else {
 			updateValues( elapsed / interval );
@@ -70,6 +72,23 @@ abstract public class Tweener extends Gizmo {
 		elapsed = complete ? interval : -1;
 	}
 	
+	//delays used by game logic (see Delayer) continue the game when they complete,
+	//plain visual tweens must not touch the shared random sequence
+	protected boolean gameplayCallback = false;
+
+	private void complete(){
+		if (!gameplayCallback){
+			onComplete();
+			return;
+		}
+		Random.beginGameplay();
+		try {
+			onComplete();
+		} finally {
+			Random.endGameplay();
+		}
+	}
+
 	protected void onComplete() {
 		if (listener != null) {
 			listener.onComplete( this );

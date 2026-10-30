@@ -21,6 +21,9 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopOrders;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopPings;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
@@ -89,10 +92,10 @@ public class CellSelector extends ScrollArea {
 			//The extra check prevents large sprites from blocking the player from clicking adjacent tiles
 
 			//hero first
-			if (Dungeon.hero.sprite != null && Dungeon.hero.sprite.overlapsPoint( p.x, p.y )){
-				PointF c = DungeonTilemap.tileCenterToWorld(Dungeon.hero.pos);
+			if (Dungeon.local().sprite != null && Dungeon.local().sprite.overlapsPoint( p.x, p.y )){
+				PointF c = DungeonTilemap.tileCenterToWorld(Dungeon.local().pos);
 				if (Math.abs(p.x - c.x) <= 12 && Math.abs(p.y - c.y) <= 12) {
-					select(Dungeon.hero.pos, event.button);
+					select(Dungeon.local().pos, event.button);
 					return;
 				}
 			}
@@ -150,23 +153,38 @@ public class CellSelector extends ScrollArea {
 	}
 	
 	public void select( int cell, int button ) {
-		if (enabled && Dungeon.hero.ready && !GameScene.interfaceBlockingHero()
+		//co-op: the "mark" button was pressed, this tap marks the cell for the group
+		if (CoopPings.picking() && cell != -1 && button != PointerEvent.RIGHT){
+			CoopPings.picked( cell );
+			return;
+		}
+		if (enabled && Dungeon.local().ready && !GameScene.interfaceBlockingHero()
 				&& listener != null && cell != -1) {
 
 			switch (button){
 				default:
-					listener.onSelect( cell );
+					final Listener answering = listener;
+					CoopSession.cellAnswered(answering, cell, new Runnable() {
+						@Override
+						public void run() {
+							answering.onSelect( cell );
+						}
+					});
 					break;
 				case PointerEvent.RIGHT:
 					listener.onRightClick( cell );
 					break;
 			}
 			GameScene.ready();
-			
+
+		} else if (button != PointerEvent.RIGHT && CoopSession.queueTap(cell)) {
+
+			//cooperative runs: kept until this player's turn starts
+
 		} else {
-			
+
 			GameScene.cancel();
-			
+
 		}
 	}
 	
@@ -328,7 +346,7 @@ public class CellSelector extends ScrollArea {
 
 			} else if (!directionFromAction(action).isZero()) {
 
-				Dungeon.hero.resting = false;
+				CoopSession.stopResting();
 				lastCellMoved = -1;
 				if (heldAction1 == SPDAction.NONE){
 					heldAction1 = action;
@@ -341,8 +359,8 @@ public class CellSelector extends ScrollArea {
 				}
 
 				return true;
-			} else if (Dungeon.hero != null && Dungeon.hero.resting){
-				Dungeon.hero.resting = false;
+			} else if (Dungeon.local() != null && Dungeon.local().resting){
+				CoopSession.stopResting();
 				return true;
 			}
 			
@@ -370,7 +388,7 @@ public class CellSelector extends ScrollArea {
 		if (newLeftStick != leftStickAction){
 			if (leftStickAction == SPDAction.NONE){
 				heldDelay = initialDelay();
-				Dungeon.hero.resting = false;
+				CoopSession.stopResting();
 			} else if (newLeftStick == SPDAction.NONE && heldDelay > 0f){
 				heldDelay = 0f;
 				moveFromActions(leftStickAction);
@@ -384,7 +402,7 @@ public class CellSelector extends ScrollArea {
 
 		if ((heldAction1 == SPDAction.NONE && leftStickAction == SPDAction.NONE)){
 			lastCellMoved = -1;
-		} else if (Dungeon.hero.ready){
+		} else if (Dungeon.local().ready){
 			processKeyHold();
 		}
 	}
@@ -393,7 +411,7 @@ public class CellSelector extends ScrollArea {
 	private int lastCellMoved = 0;
 
 	private boolean moveFromActions(GameAction... actions){
-		if (Dungeon.hero == null || !Dungeon.hero.ready){
+		if (Dungeon.local() == null || !Dungeon.local().ready){
 			return false;
 		}
 
@@ -405,16 +423,14 @@ public class CellSelector extends ScrollArea {
 		for (GameAction action : actions) {
 			direction.offset(directionFromAction(action));
 		}
-		int cell = Dungeon.hero.pos;
+		int cell = Dungeon.local().pos;
 		//clamp to adjacent values (-1 to +1)
 		cell += GameMath.gate(-1, direction.x, +1);
 		cell += GameMath.gate(-1, direction.y, +1) * Dungeon.level.width();
 
-		if (cell != Dungeon.hero.pos && cell != lastCellMoved){
+		if (cell != Dungeon.local().pos && cell != lastCellMoved){
 			lastCellMoved = cell;
-			if (Dungeon.hero.handle( cell )) {
-				Dungeon.hero.next();
-			}
+			CoopOrders.handleCell( cell );
 			return true;
 
 		} else {
@@ -462,19 +478,31 @@ public class CellSelector extends ScrollArea {
 	}
 
 	public void processKeyHold() {
+		//cooperative runs: no shortcuts that change the hero from here (forcing 'ready', recomputing the
+		//shared vision), the other device would not do the same. Only move when the hero really waits.
+		if (CoopSession.active()){
+			if (!CoopSession.localInputAllowed()) return;
+			if (!directionFromAction(leftStickAction).isZero() && heldDelay < 0) {
+				moveFromActions(leftStickAction);
+			} else if (!(directionFromAction(heldAction1).offset(directionFromAction(heldAction2)).isZero())
+					&& heldDelay <= 0){
+				moveFromActions(heldAction1, heldAction2);
+			}
+			return;
+		}
 		//prioritize moving by controller stick over moving via keys
 		if (!directionFromAction(leftStickAction).isZero() && heldDelay < 0) {
-			enabled = Dungeon.hero.ready = true;
+			enabled = Dungeon.local().ready = true;
 			Dungeon.observe();
 			if (moveFromActions(leftStickAction)) {
-				Dungeon.hero.ready = false;
+				Dungeon.local().ready = false;
 			}
 		} else if (!(directionFromAction(heldAction1).offset(directionFromAction(heldAction2)).isZero())
 				&& heldDelay <= 0){
-			enabled = Dungeon.hero.ready = true;
+			enabled = Dungeon.local().ready = true;
 			Dungeon.observe();
 			if (moveFromActions(heldAction1, heldAction2)) {
-				Dungeon.hero.ready = false;
+				Dungeon.local().ready = false;
 			}
 		}
 	}
@@ -486,7 +514,13 @@ public class CellSelector extends ScrollArea {
 	public void cancel() {
 		
 		if (listener != null) {
-			listener.onSelect( null );
+			final Listener answering = listener;
+			CoopSession.cellAnswered(answering, null, new Runnable() {
+				@Override
+				public void run() {
+					answering.onSelect( null );
+				}
+			});
 		}
 		
 		GameScene.ready();

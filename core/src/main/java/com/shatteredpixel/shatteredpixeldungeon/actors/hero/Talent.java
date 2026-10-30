@@ -47,6 +47,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineSense;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.RecallInscription;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.champions.ChampionHooks;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
@@ -76,6 +77,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.reward.Specialization;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -92,6 +94,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+
+import java.util.LinkedHashSet;
 
 public enum Talent {
 
@@ -196,6 +200,207 @@ public enum Talent {
 	BODY_FORM(180, 4), MIND_FORM(181, 4), SPIRIT_FORM(182, 4),
 	//Power of Many T4
 	BEAMING_RAY(183, 4), LIFE_LINK(184, 4), STASIS(185, 4),
+
+	//Executioner T1
+	EXE_MEAL(256), EXE_INTUITION(257), EXE_DEEP_WOUNDS(258), EXE_THICK_SKIN(259),
+	//Executioner T2
+	EXE_IRON_RESOLVE(260), EXE_LONG_REACH(261), EXE_CRUEL_BLOW(262), EXE_BLOODLUST(263), EXE_INTIMIDATE(264),
+	//Executioner T3
+	EXE_SHARP_GUILLOTINE(265, 3), EXE_RELENTLESS(266, 3),
+	//Conqueror T3
+	CQ_WARLORD(267, 3), CQ_SPIN(268, 3), CQ_BLOODFEAST(269, 3),
+	//Headsman T3
+	HS_SENTENCE(270, 3), HS_REPEAT(271, 3), HS_BLOODY_AXE(272, 3),
+
+	//Scout T1
+	SCO_MEAL(288), SCO_INTUITION(289), SCO_POTENT_VENOM(290), SCO_BLINDING_EYE(291),
+	//Scout T2
+	SCO_FLEET_FOOT(292), SCO_QUICK_CAMO(293), SCO_MORE_SHROOMS(294), SCO_LIQUID_CAMO(295), SCO_KEEN_SENSES(296),
+	//Scout T3
+	SCO_BIG_SHROOM(297, 3), SCO_AMBUSH(298, 3),
+	//Trapper T3
+	TR_BOUNCE(299, 3), TR_PARALYTIC(300, 3), TR_LONG_THROW(301, 3),
+	//Skirmisher T3
+	SK_CORROSIVE(302, 3), SK_SHADOW_STEP(303, 3), SK_RICOCHET(304, 3),
+
+	//Pyromancer T1
+	PYR_MEAL(320), PYR_INTUITION(321), PYR_SPARK(322), PYR_WARMTH(323),
+	//Pyromancer T2
+	PYR_FIRE_DRINKER(324), PYR_WIDE_FLAMES(325), PYR_BEAR_HUG(326), PYR_EARLY_SPARK(327), PYR_EMBER_STEP(328),
+	//Pyromancer T3
+	PYR_COMBUSTION(329, 3), PYR_SCORCHED(330, 3),
+	//Tamer T3
+	TM_BIG_BEAR(331, 3), TM_BOND(332, 3), TM_RESUMMON(333, 3),
+	//Infernalist T3
+	IN_PYROCLASM(334, 3), IN_FLASHFIRE(335, 3), IN_HEARTFIRE(336, 3),
+
+	//Jailer T1
+	JAI_MEAL(352), JAI_INTUITION(353), JAI_LONG_CHAIN(354), JAI_HUNGRY_SOULS(355),
+	//Jailer T2
+	JAI_SOUL_MEND(356), JAI_HEAVY_LANTERN(357), JAI_FLAY_FORCE(358), JAI_LIQUID_SOULS(359), JAI_WARDENS_GAZE(360),
+	//Jailer T3
+	JAI_DEATHS_GRIP(361, 3), JAI_PRISON(362, 3),
+	//Soulreaper T3
+	SR_SOUL_ARMOR(363, 3), SR_REAP(364, 3), SR_SOUL_FLAME(365, 3),
+	//Lanternkeeper T3
+	LK_LIGHT_WARD(366, 3), LK_ESCAPE(367, 3), LK_BOX_LANTERN(368, 3),
+
+	//Brawler T1
+	BRA_MEAL(384), BRA_INTUITION(385), BRA_HEAVY_HANDS(386), BRA_SECOND_WIND(387),
+	//Brawler T2
+	BRA_LIQUID_GRIT(388), BRA_ONE_TWO(389), BRA_STUBBORN(390), BRA_FOOTWORK(391), BRA_TAUNT(392),
+	//Brawler T3
+	BRA_BIG_SHOW(393, 3), BRA_GRIT_SHIELD(394, 3),
+	//Pitboss T3
+	PB_THICK_HIDE(395, 3), PB_IRON_JAW(396, 3), PB_HAYMAKER(397, 3),
+	//Showman T3
+	SM_CROWD(398, 3), SM_ENCORE(399, 3), SM_FLASHY(400, 3),
+
+	//Gravedigger T1
+	GRA_MEAL(416), GRA_INTUITION(417), GRA_HEAVY_SHOVEL(418), GRA_DEEP_GRAVES(419),
+	//Gravedigger T2
+	GRA_BOTTLED_MIST(420), GRA_LONG_PROCESSION(421), GRA_CLINGING_MIST(422), GRA_HARD_BONES(423), GRA_GRIM_HARVEST(424),
+	//Gravedigger T3
+	GRA_MAIDENS_WRATH(425, 3), GRA_FLOCK(426, 3),
+	//Mistlord T3
+	ML_MIST_BURST(427, 3), ML_ENDLESS_NIGHT(428, 3), ML_DARK_COMMUNION(429, 3),
+	//Exhumer T3
+	EX_GRAVE_STRENGTH(430, 3), EX_DIG_DEEP(431, 3), EX_SOUL_SHOVEL(432, 3),
+
+	//Guardian T1
+	GUA_MEAL(448), GUA_INTUITION(449), GUA_SAND_SKIN(450), GUA_HUNGRY_STAFF(451),
+	//Guardian T2
+	GUA_LIQUID_SAND(452), GUA_LONG_WITHER(453), GUA_HOT_SPIRIT(454), GUA_LIFE_DRAIN(455), GUA_COLLECTOR(456),
+	//Guardian T3
+	GUA_ETERNAL(457, 3), GUA_DUSTSTORM(458, 3),
+	//Curator T3
+	CU_ARCHIVE(459, 3), CU_QUICK_SIPHON(460, 3), CU_SPIRIT_TAX(461, 3),
+	//Colossus T3
+	CO_GIANT(462, 3), CO_UNBROKEN(463, 3), CO_WITHERING_STEPS(464, 3),
+
+	//Bard T1
+	BAR_MEAL(480), BAR_INTUITION(481), BAR_LOUD_VOICE(482), BAR_APPLAUSE(483),
+	//Bard T2
+	BAR_LIQUID_MUSIC(484), BAR_DEEP_SLEEP(485), BAR_SOOTHING(486), BAR_RALLY(487), BAR_TEMPO(488),
+	//Bard T3
+	BAR_VIRTUOSO(489, 3), BAR_DUET(490, 3),
+	//Troubadour T3
+	TB_ANTHEM(491, 3), TB_LIFE_SONG(492, 3), TB_HARMONY(493, 3),
+	//Minstrel T3
+	MI_DISSONANCE(494, 3), MI_RUDE_AWAKENING(495, 3), MI_CRESCENDO(496, 3),
+
+	//botanico: armor abilities of the Scout, Pyromancer and Gravedigger (row 16 of talent_icons.png)
+	SCO_DEEP_VENOM(512, 4), SCO_BLIND_STORM(513, 4), SCO_ENDLESS_QUIVER(514, 4),
+	PYR_BLAZING_CORE(515, 4), PYR_AFTERGLOW(516, 4), PYR_BLAST_WAVE(517, 4),
+	GRA_HEAVY_STONE(518, 4), GRA_LONG_MOURNING(519, 4), GRA_FRESH_GRAVES(520, 4),
+	//botanico: Botanist. T4 = Bloom
+	BOT_DEEP_BLOOM(521, 4), BOT_LUSH_GARDEN(522, 4), BOT_HEALING_POLLEN(523, 4),
+	//Botanist T1
+	BOT_MEAL(524), BOT_INTUITION(525), BOT_THORNY_SPROUT(526), BOT_FRESH_AIR(527),
+	//Botanist T2
+	BOT_LIQUID_SAP(528), BOT_STRONG_ROOTS(529), BOT_DEEP_ROOTS(530), BOT_PRUNING(531), BOT_SEED_BAG(532),
+	//Botanist T3
+	BOT_OVERGROWTH(533, 3), BOT_ANCIENT_BARK(534, 3),
+	//Gardener of war T3
+	WG_HARD_WOOD(535, 3), WG_TWIN_SPROUTS(536, 3), WG_THORN_BARRAGE(537, 3),
+	//Druid T3
+	DR_LIFE_BLOOM(538, 3), DR_PURIFYING_SAP(539, 3), DR_SPRING_RAIN(540, 3),
+
+	//Forger T1
+	FOR_MEAL(433), FOR_INTUITION(434), FOR_THICK_PLATES(435), FOR_HEAVY_HAMMER(436),
+	//Forger T2
+	FOR_LIQUID_FORGE(437), FOR_LONG_RIFT(438), FOR_WIDE_BELLOWS(439), FOR_LONG_CHARGE(440), FOR_TEMPER(441),
+	//Forger T3
+	FOR_RAM_HORNS(442, 3), FOR_FIRE_PILLARS(443, 3),
+	//Master Smith T3
+	MS_FINE_TEMPER(444, 3), MS_QUICK_ANVIL(445, 3), MS_MOLTEN_GIFT(446, 3),
+	//Living Mountain T3
+	LM_STONE_SKIN(447, 3), LM_QUAKE(465, 3), LM_GRANITE_HEART(466, 3),
+	//Eruption of the Forge T4 (armor ability of the Forger)
+	FER_WIDE_CRATER(467, 4), FER_DENSE_MAGMA(468, 4), FER_SEISMIC(469, 4),
+	//Sand Tomb T4 (armor ability of the Guardian)
+	GUA_DEEP_SANDS(470, 4), GUA_THIRSTY_TOMB(471, 4), GUA_AGES(472, 4),
+	//Grand Overture T4 (armor ability of the Bard)
+	BAR_ENCORE(473, 4), BAR_ECHO(474, 4), BAR_OVATION(475, 4),
+
+	//Ironlord T1
+	IRL_MEAL(544), IRL_INTUITION(545), IRL_HEAVY_MACE(546), IRL_DARK_HIDE(547),
+	//Ironlord T2
+	IRL_LIQUID_IRON(548), IRL_LONG_REACH(549), IRL_BRUTE_FORCE(550), IRL_GRAVE_WARD(551), IRL_RESONANCE(552),
+	//Ironlord T3
+	IRL_DEEPENING_DARK(553, 3), IRL_UNDYING_WILL(554, 3),
+	//Tyrant T3
+	TY_CRUSHING_AURA(555, 3), TY_OVERLORD(556, 3), TY_IRON_FIST(557, 3),
+	//Revenant T3
+	RV_BULWARK(558, 3), RV_SOUL_FEAST(559, 3), RV_ENDLESS_NIGHT(560, 3),
+	//Iron Eclipse T4
+	IE_LONG_NIGHT(561, 4), IE_SMOTHERING_DARK(562, 4), IE_IRON_HUNGER(563, 4),
+	//Blood Harvest T4 (Executioner)
+	HV_DEEP_CUT(564, 4), HV_CRIMSON_FEAST(565, 4), HV_RED_MARK(566, 4),
+	//Spectral Shackles T4 (Jailer)
+	SH_LONG_CHAINS(567, 4), SH_HEAVY_LINKS(568, 4), SH_CAPTIVE_SOULS(569, 4),
+	//Ovation T4 (Brawler)
+	OV_ROAR(570, 4), OV_IRON_GRIT(571, 4), OV_BLOOD_SAND(572, 4),
+
+	//alt worlds: Automaton T1
+	AUT_COOLANT(576), AUT_DIAGNOSTICS(577), AUT_PLATING(578), AUT_CAPACITOR(579),
+	//Automaton T2
+	AUT_SELF_REPAIR(580), AUT_SCANNER(581), AUT_OVERCLOCK(582), AUT_GROUNDING(583), AUT_SALVAGE(584),
+	//Automaton T3
+	AUT_HIGH_VOLTAGE(585, 3), AUT_FAILSAFE(586, 3),
+	//Swarm Engineer T3
+	SE_HIVE(587, 3), SE_ARMORED_DRONES(588, 3), SE_FOCUS_FIRE(589, 3),
+	//Tesla Coil T3
+	TC_ARC(590, 3), TC_SHOCK(591, 3), TC_FEEDBACK(592, 3),
+	//Sentry Turret T4
+	ST_LONG_SERVICE(593, 4), ST_HEAVY_CALIBER(594, 4), ST_TWIN_BARRELS(595, 4),
+
+	//alt worlds: Beastmaster T1
+	BM_SHARED_MEAL(596), BM_TRACKER(597), BM_THICK_FUR(598), BM_SHARP_FANGS(599),
+	//Beastmaster T2
+	BM_BONE_THROW(600), BM_HOWL(601), BM_QUICK_RECOVERY(602), BM_THORNS(603), BM_NATURES_BOND(604),
+	//Beastmaster T3
+	BM_ELEMENTAL_FANGS(605, 3), BM_BIG_BEAR(606, 3),
+	//Pack Alpha T3
+	PA_THIRD_WOLF(607, 3), PA_PACK_TACTICS(608, 3), PA_ALPHA_ROAR(609, 3),
+	//Forest Warden T3
+	FW_IRONBARK(610, 3), FW_ROOTS(611, 3), FW_BEAR_HUG(612, 3),
+	//Pack Roar T4
+	PR_THUNDEROUS(613, 4), PR_RALLY(614, 4), PR_FEROCITY(615, 4),
+
+	//alt worlds: Spiritist T1
+	SP_SOUL_FEAST(616), SP_DEATH_SENSE(617), SP_GRAVE_CHILL(618), SP_SOUL_HARVEST(619),
+	//Spiritist T2
+	SP_LINGERING_DREAD(620), SP_GHOSTLY_GRASP(621), SP_OMEN_WEIGHT(622), SP_RESTLESS_DEAD(623), SP_DARK_PACT(624),
+	//Spiritist T3
+	SP_BONE_LEGION(625, 3), SP_DREAD_HOWL(626, 3),
+	//Spectre Lord T3
+	SL_WAILING(627, 3), SL_ETHEREAL(628, 3), SL_SPECTRAL_HIDE(629, 3),
+	//Plague Herald T3
+	PH_VIRULENCE(630, 3), PH_SPREAD(631, 3), PH_BONE_HARVEST(632, 3),
+	//Soul Veil T4
+	SV_LONG_VEIL(633, 4), SV_PHANTOMS(634, 4), SV_SOUL_MEND(635, 4),
+
+	//alt worlds: Gunslinger T1
+	GS_GUN_OIL(636), GS_APPRAISAL(637), GS_STEADY_AIM(638), GS_THICK_COAT(639),
+	//Gunslinger T2
+	GS_FAST_RELOAD(640), GS_DEADEYE(641), GS_BIG_BOUNTY(642), GS_CARPET_BOMB(643), GS_HOT_STREAK(644),
+	//Gunslinger T3
+	GS_EXECUTION(645, 3), GS_RICOCHET(646, 3),
+	//Quickdraw T3
+	QD_HAIR_TRIGGER(647, 3), QD_SPEEDLOADER(648, 3), QD_DUELIST(649, 3),
+	//Bounty Hunter T3
+	BH_MARKED(650, 3), BH_LONG_HUNT(651, 3), BH_COLLECTOR(652, 3),
+
+	//T5, the paths of the heart of Thal-Vekhorr (any class)
+	//yog hunter
+	YH_BANE(688, 3), YH_SCENT(689, 3), YH_HIDE(690, 3), YH_TROPHY(691, 3),
+	//lightbearer
+	LB_BEACON(692, 3), LB_VESSEL(693, 3), LB_DAWN(694, 3), LB_RADIANCE(695, 3),
+	//time wanderer
+	TW_STOMACH(696, 3), TW_LONG_PAUSE(697, 3), TW_CLOCKWORK(698, 3), TW_QUICKSTEP(699, 3),
+	//Lead Rain T4
+	LR_WIDE(653, 4), LR_HEAVY(654, 4), LR_STUNNING(655, 4),
 
 	//universal T4
 	HEROIC_ENERGY(26, 4), //See icon() and title() for special logic for this one
@@ -432,8 +637,8 @@ public enum Talent {
 	int icon;
 	int maxPoints;
 
-	// tiers 1/2/3/4 start at levels 2/7/13/21
-	public static int[] tierLevelThresholds = new int[]{0, 2, 7, 13, 21, 31};
+	// tiers 1/2/3/4 start at levels 2/7/13/21, tier 5 (past the usual level cap) at 31
+	public static int[] tierLevelThresholds = new int[]{0, 2, 7, 13, 21, 31, 41};
 
 	Talent( int icon ){
 		this(icon, 2);
@@ -545,7 +750,8 @@ public enum Talent {
 			}
 		}
 
-		if (talent == HEIGHTENED_SENSES || talent == FARSIGHT || talent == DIVINE_SENSE){
+		if (talent == HEIGHTENED_SENSES || talent == FARSIGHT || talent == DIVINE_SENSE || talent == SCO_KEEN_SENSES
+				|| talent == AUT_SCANNER || talent == BM_TRACKER){
 			Dungeon.observe();
 		}
 
@@ -660,6 +866,8 @@ public enum Talent {
 			}
 		}
 
+		ChampionHooks.onFoodEaten(hero);
+
 		//we process these at the end as they can stack together from some talents
 		if (wandChargeTurns > 0){
 			Buff.prolong( hero, Recharging.class, wandChargeTurns );
@@ -705,10 +913,12 @@ public enum Talent {
 		if (item instanceof Ring){
 			factor *= 1f + hero.pointsInTalent(THIEFS_INTUITION);
 		}
+		factor *= ChampionHooks.itemIDSpeedFactor(hero, item);
 		return factor;
 	}
 
 	public static void onPotionUsed( Hero hero, int cell, float factor ){
+		ChampionHooks.onPotionUsed(hero, factor);
 		if (hero.hasTalent(LIQUID_WILLPOWER)){
 			// 6.5/10% of max HP
 			int shieldToGive = Math.round( factor * hero.HT * (0.030f + 0.035f*hero.pointsInTalent(LIQUID_WILLPOWER)));
@@ -922,6 +1132,8 @@ public enum Talent {
 			}
 		}
 
+		dmg = ChampionHooks.onAttackProc(hero, enemy, dmg);
+
 		return dmg;
 	}
 
@@ -957,7 +1169,7 @@ public enum Talent {
 		}
 	};
 
-	public static final int MAX_TALENT_TIERS = 4;
+	public static final int MAX_TALENT_TIERS = 5;
 
 	public static void initClassTalents( Hero hero ){
 		initClassTalents( hero.heroClass, hero.talents, hero.metamorphedTalents );
@@ -994,6 +1206,55 @@ public enum Talent {
 			case CLERIC:
 				Collections.addAll(tierTalents, SATIATED_SPELLS, HOLY_INTUITION, SEARING_LIGHT, SHIELD_OF_LIGHT);
 				break;
+			case EXECUTIONER:
+				Collections.addAll(tierTalents, EXE_MEAL, EXE_INTUITION, EXE_DEEP_WOUNDS, EXE_THICK_SKIN);
+				break;
+			case SCOUT:
+				Collections.addAll(tierTalents, SCO_MEAL, SCO_INTUITION, SCO_POTENT_VENOM, SCO_BLINDING_EYE);
+				break;
+			case PYROMANCER:
+				Collections.addAll(tierTalents, PYR_MEAL, PYR_INTUITION, PYR_SPARK, PYR_WARMTH);
+				break;
+			case JAILER:
+				Collections.addAll(tierTalents, JAI_MEAL, JAI_INTUITION, JAI_LONG_CHAIN, JAI_HUNGRY_SOULS);
+				break;
+			case BRAWLER:
+				Collections.addAll(tierTalents, BRA_MEAL, BRA_INTUITION, BRA_HEAVY_HANDS, BRA_SECOND_WIND);
+				break;
+			case GRAVEDIGGER:
+				Collections.addAll(tierTalents, GRA_MEAL, GRA_INTUITION, GRA_HEAVY_SHOVEL, GRA_DEEP_GRAVES);
+				break;
+			case GUARDIAN:
+				Collections.addAll(tierTalents, GUA_MEAL, GUA_INTUITION, GUA_SAND_SKIN, GUA_HUNGRY_STAFF);
+				break;
+			case BARD:
+				Collections.addAll(tierTalents, BAR_MEAL, BAR_INTUITION, BAR_LOUD_VOICE, BAR_APPLAUSE);
+				break;
+			//botanico
+			case BOTANIST:
+				Collections.addAll(tierTalents, BOT_MEAL, BOT_INTUITION, BOT_THORNY_SPROUT, BOT_FRESH_AIR);
+				break;
+			//ornn
+			case FORGER:
+				Collections.addAll(tierTalents, FOR_MEAL, FOR_INTUITION, FOR_THICK_PLATES, FOR_HEAVY_HAMMER);
+				break;
+			//mordekaiser
+			case IRONLORD:
+				Collections.addAll(tierTalents, IRL_MEAL, IRL_INTUITION, IRL_HEAVY_MACE, IRL_DARK_HIDE);
+				break;
+			//alt worlds
+			case AUTOMATON:
+				Collections.addAll(tierTalents, AUT_COOLANT, AUT_DIAGNOSTICS, AUT_PLATING, AUT_CAPACITOR);
+				break;
+			case BEASTMASTER:
+				Collections.addAll(tierTalents, BM_SHARED_MEAL, BM_TRACKER, BM_THICK_FUR, BM_SHARP_FANGS);
+				break;
+			case SPIRITIST:
+				Collections.addAll(tierTalents, SP_SOUL_FEAST, SP_DEATH_SENSE, SP_GRAVE_CHILL, SP_SOUL_HARVEST);
+				break;
+			case GUNSLINGER:
+				Collections.addAll(tierTalents, GS_GUN_OIL, GS_APPRAISAL, GS_STEADY_AIM, GS_THICK_COAT);
+				break;
 		}
 		for (Talent talent : tierTalents){
 			if (replacements.containsKey(talent)){
@@ -1023,6 +1284,55 @@ public enum Talent {
 			case CLERIC:
 				Collections.addAll(tierTalents, ENLIGHTENING_MEAL, RECALL_INSCRIPTION, SUNRAY, DIVINE_SENSE, BLESS);
 				break;
+			case EXECUTIONER:
+				Collections.addAll(tierTalents, EXE_IRON_RESOLVE, EXE_LONG_REACH, EXE_CRUEL_BLOW, EXE_BLOODLUST, EXE_INTIMIDATE);
+				break;
+			case SCOUT:
+				Collections.addAll(tierTalents, SCO_FLEET_FOOT, SCO_QUICK_CAMO, SCO_MORE_SHROOMS, SCO_LIQUID_CAMO, SCO_KEEN_SENSES);
+				break;
+			case PYROMANCER:
+				Collections.addAll(tierTalents, PYR_FIRE_DRINKER, PYR_WIDE_FLAMES, PYR_BEAR_HUG, PYR_EARLY_SPARK, PYR_EMBER_STEP);
+				break;
+			case JAILER:
+				Collections.addAll(tierTalents, JAI_SOUL_MEND, JAI_HEAVY_LANTERN, JAI_FLAY_FORCE, JAI_LIQUID_SOULS, JAI_WARDENS_GAZE);
+				break;
+			case BRAWLER:
+				Collections.addAll(tierTalents, BRA_LIQUID_GRIT, BRA_ONE_TWO, BRA_STUBBORN, BRA_FOOTWORK, BRA_TAUNT);
+				break;
+			case GRAVEDIGGER:
+				Collections.addAll(tierTalents, GRA_BOTTLED_MIST, GRA_LONG_PROCESSION, GRA_CLINGING_MIST, GRA_HARD_BONES, GRA_GRIM_HARVEST);
+				break;
+			case GUARDIAN:
+				Collections.addAll(tierTalents, GUA_LIQUID_SAND, GUA_LONG_WITHER, GUA_HOT_SPIRIT, GUA_LIFE_DRAIN, GUA_COLLECTOR);
+				break;
+			case BARD:
+				Collections.addAll(tierTalents, BAR_LIQUID_MUSIC, BAR_DEEP_SLEEP, BAR_SOOTHING, BAR_RALLY, BAR_TEMPO);
+				break;
+			//botanico
+			case BOTANIST:
+				Collections.addAll(tierTalents, BOT_LIQUID_SAP, BOT_STRONG_ROOTS, BOT_DEEP_ROOTS, BOT_PRUNING, BOT_SEED_BAG);
+				break;
+			//ornn
+			case FORGER:
+				Collections.addAll(tierTalents, FOR_LIQUID_FORGE, FOR_LONG_RIFT, FOR_WIDE_BELLOWS, FOR_LONG_CHARGE, FOR_TEMPER);
+				break;
+			//mordekaiser
+			case IRONLORD:
+				Collections.addAll(tierTalents, IRL_LIQUID_IRON, IRL_LONG_REACH, IRL_BRUTE_FORCE, IRL_GRAVE_WARD, IRL_RESONANCE);
+				break;
+			//alt worlds
+			case AUTOMATON:
+				Collections.addAll(tierTalents, AUT_SELF_REPAIR, AUT_SCANNER, AUT_OVERCLOCK, AUT_GROUNDING, AUT_SALVAGE);
+				break;
+			case BEASTMASTER:
+				Collections.addAll(tierTalents, BM_BONE_THROW, BM_HOWL, BM_QUICK_RECOVERY, BM_THORNS, BM_NATURES_BOND);
+				break;
+			case SPIRITIST:
+				Collections.addAll(tierTalents, SP_LINGERING_DREAD, SP_GHOSTLY_GRASP, SP_OMEN_WEIGHT, SP_RESTLESS_DEAD, SP_DARK_PACT);
+				break;
+			case GUNSLINGER:
+				Collections.addAll(tierTalents, GS_FAST_RELOAD, GS_DEADEYE, GS_BIG_BOUNTY, GS_CARPET_BOMB, GS_HOT_STREAK);
+				break;
 		}
 		for (Talent talent : tierTalents){
 			if (replacements.containsKey(talent)){
@@ -1051,6 +1361,55 @@ public enum Talent {
 				break;
 			case CLERIC:
 				Collections.addAll(tierTalents, CLEANSE, LIGHT_READING);
+				break;
+			case EXECUTIONER:
+				Collections.addAll(tierTalents, EXE_SHARP_GUILLOTINE, EXE_RELENTLESS);
+				break;
+			case SCOUT:
+				Collections.addAll(tierTalents, SCO_BIG_SHROOM, SCO_AMBUSH);
+				break;
+			case PYROMANCER:
+				Collections.addAll(tierTalents, PYR_COMBUSTION, PYR_SCORCHED);
+				break;
+			case JAILER:
+				Collections.addAll(tierTalents, JAI_DEATHS_GRIP, JAI_PRISON);
+				break;
+			case BRAWLER:
+				Collections.addAll(tierTalents, BRA_BIG_SHOW, BRA_GRIT_SHIELD);
+				break;
+			case GRAVEDIGGER:
+				Collections.addAll(tierTalents, GRA_MAIDENS_WRATH, GRA_FLOCK);
+				break;
+			case GUARDIAN:
+				Collections.addAll(tierTalents, GUA_ETERNAL, GUA_DUSTSTORM);
+				break;
+			case BARD:
+				Collections.addAll(tierTalents, BAR_VIRTUOSO, BAR_DUET);
+				break;
+			//botanico
+			case BOTANIST:
+				Collections.addAll(tierTalents, BOT_OVERGROWTH, BOT_ANCIENT_BARK);
+				break;
+			//ornn
+			case FORGER:
+				Collections.addAll(tierTalents, FOR_RAM_HORNS, FOR_FIRE_PILLARS);
+				break;
+			//mordekaiser
+			case IRONLORD:
+				Collections.addAll(tierTalents, IRL_DEEPENING_DARK, IRL_UNDYING_WILL);
+				break;
+			//alt worlds
+			case AUTOMATON:
+				Collections.addAll(tierTalents, AUT_HIGH_VOLTAGE, AUT_FAILSAFE);
+				break;
+			case BEASTMASTER:
+				Collections.addAll(tierTalents, BM_ELEMENTAL_FANGS, BM_BIG_BEAR);
+				break;
+			case SPIRITIST:
+				Collections.addAll(tierTalents, SP_BONE_LEGION, SP_DREAD_HOWL);
+				break;
+			case GUNSLINGER:
+				Collections.addAll(tierTalents, GS_EXECUTION, GS_RICOCHET);
 				break;
 		}
 		for (Talent talent : tierTalents){
@@ -1116,6 +1475,100 @@ public enum Talent {
 			case PALADIN:
 				Collections.addAll(tierTalents, LAY_ON_HANDS, AURA_OF_PROTECTION, WALL_OF_LIGHT);
 				break;
+			case CONQUEROR:
+				Collections.addAll(tierTalents, CQ_WARLORD, CQ_SPIN, CQ_BLOODFEAST);
+				break;
+			case HEADSMAN:
+				Collections.addAll(tierTalents, HS_SENTENCE, HS_REPEAT, HS_BLOODY_AXE);
+				break;
+			case TRAPPER:
+				Collections.addAll(tierTalents, TR_BOUNCE, TR_PARALYTIC, TR_LONG_THROW);
+				break;
+			case SKIRMISHER:
+				Collections.addAll(tierTalents, SK_CORROSIVE, SK_SHADOW_STEP, SK_RICOCHET);
+				break;
+			case TAMER:
+				Collections.addAll(tierTalents, TM_BIG_BEAR, TM_BOND, TM_RESUMMON);
+				break;
+			case INFERNALIST:
+				Collections.addAll(tierTalents, IN_PYROCLASM, IN_FLASHFIRE, IN_HEARTFIRE);
+				break;
+			case SOULREAPER:
+				Collections.addAll(tierTalents, SR_SOUL_ARMOR, SR_REAP, SR_SOUL_FLAME);
+				break;
+			case LANTERNKEEPER:
+				Collections.addAll(tierTalents, LK_LIGHT_WARD, LK_ESCAPE, LK_BOX_LANTERN);
+				break;
+			case PITBOSS:
+				Collections.addAll(tierTalents, PB_THICK_HIDE, PB_IRON_JAW, PB_HAYMAKER);
+				break;
+			case SHOWMAN:
+				Collections.addAll(tierTalents, SM_CROWD, SM_ENCORE, SM_FLASHY);
+				break;
+			case MISTLORD:
+				Collections.addAll(tierTalents, ML_MIST_BURST, ML_ENDLESS_NIGHT, ML_DARK_COMMUNION);
+				break;
+			case EXHUMER:
+				Collections.addAll(tierTalents, EX_GRAVE_STRENGTH, EX_DIG_DEEP, EX_SOUL_SHOVEL);
+				break;
+			case CURATOR:
+				Collections.addAll(tierTalents, CU_ARCHIVE, CU_QUICK_SIPHON, CU_SPIRIT_TAX);
+				break;
+			case COLOSSUS:
+				Collections.addAll(tierTalents, CO_GIANT, CO_UNBROKEN, CO_WITHERING_STEPS);
+				break;
+			case TROUBADOUR:
+				Collections.addAll(tierTalents, TB_ANTHEM, TB_LIFE_SONG, TB_HARMONY);
+				break;
+			case MINSTREL:
+				Collections.addAll(tierTalents, MI_DISSONANCE, MI_RUDE_AWAKENING, MI_CRESCENDO);
+				break;
+			//botanico
+			case WARGARDENER:
+				Collections.addAll(tierTalents, WG_HARD_WOOD, WG_TWIN_SPROUTS, WG_THORN_BARRAGE);
+				break;
+			case DRUID:
+				Collections.addAll(tierTalents, DR_LIFE_BLOOM, DR_PURIFYING_SAP, DR_SPRING_RAIN);
+				break;
+			//ornn
+			case MASTERSMITH:
+				Collections.addAll(tierTalents, MS_FINE_TEMPER, MS_QUICK_ANVIL, MS_MOLTEN_GIFT);
+				break;
+			case LIVINGMOUNTAIN:
+				Collections.addAll(tierTalents, LM_STONE_SKIN, LM_QUAKE, LM_GRANITE_HEART);
+				break;
+			//mordekaiser
+			case TYRANT:
+				Collections.addAll(tierTalents, TY_CRUSHING_AURA, TY_OVERLORD, TY_IRON_FIST);
+				break;
+			case REVENANT:
+				Collections.addAll(tierTalents, RV_BULWARK, RV_SOUL_FEAST, RV_ENDLESS_NIGHT);
+				break;
+			//alt worlds
+			case SWARM_ENGINEER:
+				Collections.addAll(tierTalents, SE_HIVE, SE_ARMORED_DRONES, SE_FOCUS_FIRE);
+				break;
+			case TESLA_COIL:
+				Collections.addAll(tierTalents, TC_ARC, TC_SHOCK, TC_FEEDBACK);
+				break;
+			case PACK_ALPHA:
+				Collections.addAll(tierTalents, PA_THIRD_WOLF, PA_PACK_TACTICS, PA_ALPHA_ROAR);
+				break;
+			case FOREST_WARDEN:
+				Collections.addAll(tierTalents, FW_IRONBARK, FW_ROOTS, FW_BEAR_HUG);
+				break;
+			case SPECTRE_LORD:
+				Collections.addAll(tierTalents, SL_WAILING, SL_ETHEREAL, SL_SPECTRAL_HIDE);
+				break;
+			case PLAGUE_HERALD:
+				Collections.addAll(tierTalents, PH_VIRULENCE, PH_SPREAD, PH_BONE_HARVEST);
+				break;
+			case QUICKDRAW:
+				Collections.addAll(tierTalents, QD_HAIR_TRIGGER, QD_SPEEDLOADER, QD_DUELIST);
+				break;
+			case BOUNTY_HUNTER:
+				Collections.addAll(tierTalents, BH_MARKED, BH_LONG_HUNT, BH_COLLECTOR);
+				break;
 		}
 		for (Talent talent : tierTalents){
 			talents.get(2).put(talent, 0);
@@ -1137,6 +1590,22 @@ public enum Talent {
 
 		for (Talent t : abil.talents()){
 			talents.get(3).put(t, 0);
+		}
+	}
+
+	public static void initSpecTalents( Hero hero ){
+		initSpecTalents( hero.specialization, hero.talents );
+	}
+
+	public static void initSpecTalents( Specialization spec, ArrayList<LinkedHashMap<Talent, Integer>> talents ){
+		if (spec == null) return;
+
+		while (talents.size() < MAX_TALENT_TIERS){
+			talents.add(new LinkedHashMap<>());
+		}
+
+		for (Talent t : spec.talents()){
+			talents.get(4).put(t, 0);
 		}
 	}
 
@@ -1165,12 +1634,12 @@ public enum Talent {
 		bundle.put("replacements", replacementsBundle);
 	}
 
-	private static final HashSet<String> removedTalents = new HashSet<>();
+	private static final HashSet<String> removedTalents = new LinkedHashSet<>();
 	static{
 		//nothing atm
 	}
 
-	private static final HashMap<String, String> renamedTalents = new HashMap<>();
+	private static final HashMap<String, String> renamedTalents = new LinkedHashMap<>();
 	static{
 		//nothing atm
 	}
@@ -1195,6 +1664,7 @@ public enum Talent {
 		if (hero.heroClass != null)     initClassTalents(hero);
 		if (hero.subClass != null)      initSubclassTalents(hero);
 		if (hero.armorAbility != null)  initArmorTalents(hero);
+		if (hero.specialization != null) initSpecTalents(hero);
 
 		for (int i = 0; i < MAX_TALENT_TIERS; i++){
 			LinkedHashMap<Talent, Integer> tier = hero.talents.get(i);

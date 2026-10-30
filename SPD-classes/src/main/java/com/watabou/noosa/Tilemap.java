@@ -227,7 +227,23 @@ public class Tilemap extends Visual {
 
 		script.camera( camera );
 
-		script.drawQuadSet( buffer, size, 0 );
+		if (size <= 4096) {
+			script.drawQuadSet( buffer, size, 0 );
+			return;
+		}
+
+		//big maps: only the rows the camera can see (plus a margin for raised walls)
+		int first = 0, count = size;
+		Camera c = camera != null ? camera : Camera.main;
+		if (c != null && mapWidth > 0 && scale.y > 0 && angle == 0) {
+			float rowH = cellH * scale.y;
+			int r0 = Math.max( 0, (int)Math.floor( (c.scroll.y - y) / rowH ) - 2 );
+			int r1 = Math.min( mapHeight, (int)Math.ceil( (c.scroll.y + c.height - y) / rowH ) + 2 );
+			if (r1 <= r0) return;
+			first = r0 * mapWidth;
+			count = (r1 - r0) * mapWidth;
+		}
+		script.drawQuadRange( buffer, count, first );
 
 	}
 	

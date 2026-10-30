@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
+import com.shatteredpixel.shatteredpixeldungeon.coop.WndCoopScore;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
@@ -120,6 +122,9 @@ public class AmuletScene extends PixelScene {
 		btnStay.icon(Icons.CLOSE.get());
 		btnStay.setSize( WIDTH, BTN_HEIGHT );
 		add( btnStay );
+
+		//co-op: the scoreboard of the run
+		if (Party.active()) addToFront(new WndCoopScore());
 
 		RectF insets = getCommonInsets();
 		int w = (int) (Camera.main.width - insets.left + insets.right);

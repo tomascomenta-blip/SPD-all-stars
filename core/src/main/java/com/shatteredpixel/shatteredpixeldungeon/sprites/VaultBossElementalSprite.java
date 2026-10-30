@@ -85,7 +85,7 @@ public class VaultBossElementalSprite extends MobSprite {
 
 		//pick a random form if we have none
 		if (form == null){
-			form = VaultBossElemental.ElementalForm.values()[Random.Int(3)];
+			form = VaultBossElemental.ElementalForm.values()[Random.Visual.Int(3)];
 		}
 
 		int c = 16*form.ordinal();

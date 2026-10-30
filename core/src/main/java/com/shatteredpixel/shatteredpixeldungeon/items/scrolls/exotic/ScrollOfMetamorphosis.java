@@ -212,6 +212,9 @@ public class ScrollOfMetamorphosis extends ExoticScroll {
 
 			for (HeroClass cls : HeroClass.values()){
 
+				//champion talents only work with their own kits, so they are not offered
+				if (cls.isChampion()) continue;
+
 				ArrayList<LinkedHashMap<Talent, Integer>> clsTalents = new ArrayList<>();
 				Talent.initClassTalents(cls, clsTalents);
 

@@ -25,6 +25,9 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.champions.ChampionHooks;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopBalance;
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
@@ -90,7 +93,15 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.features.Chasm;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Swiftthistle;
+import com.shatteredpixel.shatteredpixeldungeon.rift.RiftBosses;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKChampion;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKDifficulty;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.Continent;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.awake.Awakening;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.big.Colossus;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.finale.reward.SpecPowers;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.props.SKStatue;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
@@ -107,6 +118,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+
+import java.util.LinkedHashSet;
 
 public abstract class Mob extends Char {
 
@@ -134,6 +147,11 @@ public abstract class Mob extends Char {
 	public int maxLvl = Hero.MAX_LEVEL-1;
 	
 	protected Char enemy;
+
+	//current target, used to decide which hero is 'in context' during this mob's turn
+	public Char focusTarget(){
+		return enemy;
+	}
 	protected int enemyID = -1; //used for save/restore
 	protected boolean enemySeen;
 	protected boolean alerted = false;
@@ -145,7 +163,10 @@ public abstract class Mob extends Char {
 		if (firstAdded) {
 			//modify health for ascension challenge if applicable, only on first add
 			float percent = HP / (float) HT;
-			HT = Math.round(HT * AscensionChallenge.statModifier(this));
+			HT = Math.round(HT * AscensionChallenge.statModifier(this)
+					* CoopBalance.hpFactor(this) //coop: bigger parties
+					* SKDifficulty.hpFactor(this) //difficulty of the run
+					* Continent.hpFactor(this)); //the dark continent: the essence calls
 			HP = Math.round(HT * percent);
 			firstAdded = false;
 		}
@@ -287,6 +308,8 @@ public abstract class Mob extends Char {
 		}
 		
 		enemy = chooseEnemy();
+		//the dark continent, awake: nothing over there lets the party out of its sight
+		enemy = Awakening.prey(this, enemy);
 		
 		boolean enemyInFOV = enemy != null && enemy.isAlive() && fieldOfView[enemy.pos] && enemy.invisible <= 0;
 
@@ -356,6 +379,10 @@ public abstract class Mob extends Char {
 	
 	protected Char chooseEnemy() {
 
+		//cooperative runs: a boss angry at the other boss of the floor
+		Char rival = RiftBosses.rival(this);
+		if (rival != null) return rival;
+
 		Dread dread = buff( Dread.class );
 		if (dread != null) {
 			Char source = (Char)Actor.findById( dread.object );
@@ -393,7 +420,7 @@ public abstract class Mob extends Char {
 		if ( enemy == null || !enemy.isAlive() || !Actor.chars().contains(enemy) || state == WANDERING) {
 			newEnemy = true;
 		//We are amoked and current enemy is the hero
-		} else if (buff( Amok.class ) != null && enemy == Dungeon.hero) {
+		} else if (buff( Amok.class ) != null && Party.isPartyHero(enemy)) {
 			newEnemy = true;
 		//We are charmed and current enemy is what charmed us
 		} else if (buff(Charm.class) != null && buff(Charm.class).object == enemy.id()) {
@@ -413,7 +440,7 @@ public abstract class Mob extends Char {
 
 		if ( newEnemy ) {
 
-			HashSet<Char> enemies = new HashSet<>();
+			HashSet<Char> enemies = new LinkedHashSet<>();
 
 			//if we are amoked...
 			if ( buff(Amok.class) != null) {
@@ -434,9 +461,7 @@ public abstract class Mob extends Char {
 					
 					if (enemies.isEmpty()) {
 						//try to find the hero third
-						if (fieldOfView[Dungeon.hero.pos] && Dungeon.hero.invisible <= 0) {
-							enemies.add(Dungeon.hero);
-						}
+						addVisibleHeroes(enemies);
 					}
 				}
 				
@@ -460,10 +485,8 @@ public abstract class Mob extends Char {
 					if (mob.alignment == Alignment.ALLY && fieldOfView[mob.pos] && mob.invisible <= 0)
 						enemies.add(mob);
 
-				//and look for the hero
-				if (fieldOfView[Dungeon.hero.pos] && Dungeon.hero.invisible <= 0) {
-					enemies.add(Dungeon.hero);
-				}
+				//and look for the hero(es)
+				addVisibleHeroes(enemies);
 				
 			}
 
@@ -501,13 +524,13 @@ public abstract class Mob extends Char {
 					} else if ((canAttack(curr) && !canAttack(closest))
 							|| (currDist < closestDist)){
 						closest = curr;
-					} else if ( curr == Dungeon.hero &&
+					} else if ( Party.isPartyHero(curr) &&
 							(currDist == closestDist) || (canAttack(curr) && canAttack(closest))){
 						closest = curr;
 					}
 				}
 				//if we were going to target the hero, but an afterimage exists, target that instead
-				if (closest == Dungeon.hero){
+				if (Party.isPartyHero(closest)){
 					for (Char ch : enemies){
 						if (ch instanceof Feint.AfterImage){
 							closest = ch;
@@ -523,6 +546,14 @@ public abstract class Mob extends Char {
 			return enemy;
 	}
 	
+	private void addVisibleHeroes( HashSet<Char> enemies ){
+		for (Hero h : Party.living()){
+			if (fieldOfView[h.pos] && h.invisible <= 0) {
+				enemies.add(h);
+			}
+		}
+	}
+
 	@Override
 	public boolean add( Buff buff ) {
 		if (super.add( buff )) {
@@ -560,6 +591,9 @@ public abstract class Mob extends Char {
 		if (Dungeon.level.adjacent( pos, enemy.pos )){
 			return true;
 		}
+		if (enemy instanceof Colossus && ((Colossus) enemy).touches( pos )){
+			return true;
+		}
 		for (ChampionEnemy buff : buffs(ChampionEnemy.class)){
 			if (buff.canAttackWithExtraReach( enemy )){
 				return true;
@@ -589,6 +623,10 @@ public abstract class Mob extends Char {
 	}
 
 	protected boolean getCloser( int target ) {
+
+		//a big one is reached by its edge, its middle is under the body
+		Colossus big = Colossus.at( target );
+		if (big != null && big != this) target = big.approachCell( pos );
 		
 		if (rooted || target == pos || !Dungeon.level.insideMap(target)) {
 			return false;
@@ -763,7 +801,7 @@ public abstract class Mob extends Char {
 						if (sprite.visible){
 							elapsed = progress = 1;
 						}
-						progress = (float)Math.pow(progress, 2); //alpha fades slowly then quickly
+						progress = (float)StrictMath.pow(progress, 2); //alpha fades slowly then quickly
 						super.updateValues(progress);
 					}
 
@@ -914,6 +952,16 @@ public abstract class Mob extends Char {
 	}
 
 	//whether the hero should interact with the mob (true) or attack it (false)
+	//alt worlds: a tamed animal travels with its hero and walks after it
+	public void makeIntelligentAlly(){
+		intelligentAlly = true;
+	}
+
+	public void followTo( int cell ){
+		target = cell;
+		if (state != HUNTING && state != FLEEING) state = WANDERING;
+	}
+
 	public boolean heroShouldInteract(){
 		return alignment != Alignment.ENEMY && buff(Amok.class) == null;
 	}
@@ -974,7 +1022,7 @@ public abstract class Mob extends Char {
 			GameScene.updateFog(pos, 2);
 		}
 
-		if (Dungeon.hero.isAlive()) {
+		if (Party.anyAlive()) {
 			
 			if (alignment == Alignment.ENEMY) {
 				Statistics.enemiesSlain++;
@@ -984,7 +1032,23 @@ public abstract class Mob extends Char {
 				Bestiary.countEncounter(getClass());
 
 				AscensionChallenge.processEnemyKill(this);
-				
+
+				//in cooperative runs every living hero earns the experience
+				for (Hero h : Party.living()){
+					Party.withHero(h, new Runnable() {
+						@Override
+						public void run() {
+							grantKillExp();
+						}
+					});
+				}
+			}
+		}
+	}
+
+	private void grantKillExp(){
+		{
+			{
 				int exp = Dungeon.hero.lvl <= maxLvl ? EXP : 0;
 
 				//during ascent, under-levelled enemies grant 10 xp each until level 30
@@ -1035,6 +1099,11 @@ public abstract class Mob extends Char {
 
 			rollToDropLoot();
 
+			ChampionHooks.onMobDeath(this, cause);
+			SKChampion.onDeath(this);
+			SKStatue.onMobDeath(this);
+			SpecPowers.onMobDeath(this, cause);
+
 			if (cause == Dungeon.hero || cause instanceof Weapon || cause instanceof Weapon.Enchantment){
 				if (Dungeon.hero.hasTalent(Talent.LETHAL_MOMENTUM)
 						&& Random.Float() < 0.34f + 0.33f* Dungeon.hero.pointsInTalent(Talent.LETHAL_MOMENTUM)){
@@ -1082,7 +1151,7 @@ public abstract class Mob extends Char {
 			Preparation prep = Dungeon.hero.buff(Preparation.class);
 			if (prep != null){
 				// 2/4/8/16% per prep level, multiplied by talent points
-				float bhBonus = 0.02f * (float)Math.pow(2, prep.attackLevel()-1);
+				float bhBonus = 0.02f * (float)StrictMath.pow(2, prep.attackLevel()-1);
 				bhBonus *= Dungeon.hero.pointsInTalent(Talent.BOUNTY_HUNTER);
 				dropBonus += bhBonus;
 			}
@@ -1244,9 +1313,11 @@ public abstract class Mob extends Char {
 					if (fieldOfView[ch.pos] && ch.invisible == 0 && ch.alignment != alignment && ch.alignment != Alignment.NEUTRAL){
 						float bestChance = detectionChance(ch);
 						//silent steps rogue talent, which also applies to rogue's shadow clone
+						//in cooperative runs each hero uses their own talents
+						Hero stepper = ch instanceof Hero ? (Hero) ch : Dungeon.hero;
 						if ((ch instanceof Hero || ch instanceof ShadowClone.ShadowAlly)
-								&& Dungeon.hero.hasTalent(Talent.SILENT_STEPS)){
-							if (distance(ch) >= 4 - Dungeon.hero.pointsInTalent(Talent.SILENT_STEPS)) {
+								&& stepper.hasTalent(Talent.SILENT_STEPS)){
+							if (distance(ch) >= 4 - stepper.pointsInTalent(Talent.SILENT_STEPS)) {
 								bestChance = Float.POSITIVE_INFINITY;
 							}
 						}
@@ -1625,7 +1696,7 @@ public abstract class Mob extends Char {
 				return 1 / (distance( enemy ) + enemy.stealth());
 			//otherwise uses very low chance detection (1/8 at 2 tiles, 0% at 3+)
 			} else {
-				float chance = 1 / (float)Math.pow((distance( enemy ) + enemy.stealth()), 3);
+				float chance = 1 / (float)StrictMath.pow((distance( enemy ) + enemy.stealth()), 3);
 				if (chance < 0.1f){
 					return 0;
 				} else {
@@ -1705,7 +1776,7 @@ public abstract class Mob extends Char {
 		//set to 0 if below 10% (usually happens at 4+ distance)
 		@Override
 		protected float detectionChance( Char enemy ){
-			float chance = 1 / (float)Math.pow((distance( enemy ) + enemy.stealth()), 2);
+			float chance = 1 / (float)StrictMath.pow((distance( enemy ) + enemy.stealth()), 2);
 			if (chance < 0.1f){
 				return 0;
 			} else {
@@ -1758,7 +1829,7 @@ public abstract class Mob extends Char {
 
 			//gravitate pos sets a preferred location for allies to be closer to
 			if (gravitatePos == -1) {
-				Collections.shuffle(candidatePositions);
+				Random.shuffle(candidatePositions);
 			} else {
 				Collections.sort(candidatePositions, new Comparator<Integer>() {
 					@Override

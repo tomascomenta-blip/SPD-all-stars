@@ -195,7 +195,7 @@ public class GooSprite extends MobSprite {
 			left = lifespan;
 
 			size = 4;
-			speed.polar( -Random.Float( PointF.PI ), Random.Float( 32, 48 ) );
+			speed.polar( -Random.Visual.Float( PointF.PI ), Random.Visual.Float( 32, 48 ) );
 		}
 
 		@Override

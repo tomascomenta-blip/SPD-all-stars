@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopOrders;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
@@ -64,7 +65,7 @@ public class WndQuickBag extends Window {
 
 		ArrayList<Item> items = new ArrayList<>();
 
-		for (Item i : bag == null ? Dungeon.hero.belongings : bag){
+		for (Item i : bag == null ? Dungeon.local().belongings : bag){
 			if (i.defaultAction() == null){
 				continue;
 			}
@@ -72,9 +73,9 @@ public class WndQuickBag extends Window {
 				continue;
 			}
 			if (i instanceof Artifact
-					&& !i.isEquipped(Dungeon.hero)
-					&& (!(i instanceof CloakOfShadows) || !Dungeon.hero.hasTalent(Talent.LIGHT_CLOAK))
-					&& (!(i instanceof HolyTome) || !Dungeon.hero.hasTalent(Talent.LIGHT_READING))){
+					&& !i.isEquipped(Dungeon.local())
+					&& (!(i instanceof CloakOfShadows) || !Dungeon.local().hasTalent(Talent.LIGHT_CLOAK))
+					&& (!(i instanceof HolyTome) || !Dungeon.local().hasTalent(Talent.LIGHT_READING))){
 				continue;
 			}
 			items.add(i);
@@ -98,13 +99,13 @@ public class WndQuickBag extends Window {
 			InventorySlot slot = new InventorySlot(i){
 				@Override
 				protected void onClick() {
-					if (Dungeon.hero == null || !Dungeon.hero.isAlive() || !Dungeon.hero.belongings.contains(item)){
+					if (Dungeon.local() == null || !Dungeon.local().isAlive() || !Dungeon.local().belongings.contains(item)){
 						Game.scene().addToFront(new WndUseItem(WndQuickBag.this, item));
 						return;
 					}
 
 					hide();
-					item.execute(Dungeon.hero);
+					CoopOrders.execute(item, null);
 					if (item.usesTargeting && bag != null){
 						int idx = Dungeon.quickslot.getSlot(WndQuickBag.bag);
 						if (idx != -1){
@@ -163,9 +164,9 @@ public class WndQuickBag extends Window {
 	public static final Comparator<Item> quickBagComparator = new Comparator<Item>() {
 		@Override
 		public int compare( Item lhs, Item rhs ) {
-			if (lhs.isEquipped(Dungeon.hero) && !rhs.isEquipped(Dungeon.hero)){
+			if (lhs.isEquipped(Dungeon.local()) && !rhs.isEquipped(Dungeon.local())){
 				return -1;
-			} else if (!lhs.isEquipped(Dungeon.hero) && rhs.isEquipped(Dungeon.hero)){
+			} else if (!lhs.isEquipped(Dungeon.local()) && rhs.isEquipped(Dungeon.local())){
 				return 1;
 			} else {
 				return Generator.Category.order(lhs) - Generator.Category.order(rhs);

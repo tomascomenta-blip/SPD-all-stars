@@ -232,7 +232,8 @@ public class ScrollOfTransmutation extends InventoryScroll {
 		Weapon n;
 		Generator.Category c;
 		if (w instanceof MeleeWeapon) {
-			c = Generator.wepTiers[((MeleeWeapon)w).tier - 1];
+			//tier 6 gear (the loot of Thal-Vekhorr) turns into tier 5, there's nothing above
+			c = Generator.wepTiers[Math.min(((MeleeWeapon)w).tier, Generator.wepTiers.length) - 1];
 		} else {
 			c = Generator.misTiers[((MissileWeapon)w).tier - 1];
 		}

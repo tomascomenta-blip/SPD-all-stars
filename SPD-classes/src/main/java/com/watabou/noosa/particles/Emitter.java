@@ -89,7 +89,7 @@ public class Emitter extends Group {
 
 	public void start( Factory factory, float interval, int quantity ) {
 		//by default the delay is random, up to the interval
-		startDelayed( factory, interval, quantity, Random.Float(interval));
+		startDelayed( factory, interval, quantity, Random.Visual.Float(interval));
 	}
 
 	public void startDelayed( Factory factory, float interval, int quantity, float delay ) {
@@ -151,21 +151,21 @@ public class Emitter extends Group {
 			factory.emit(
 				this,
 				index,
-				x + Random.Float( width ),
-				y + Random.Float( height ) );
+				x + Random.Visual.Float( width ),
+				y + Random.Visual.Float( height ) );
 		} else {
 			if (fillTarget) {
 				factory.emit(
 						this,
 						index,
-						target.x + Random.Float( target.width() ),
-						target.y + Random.Float( target.height() ) );
+						target.x + Random.Visual.Float( target.width() ),
+						target.y + Random.Visual.Float( target.height() ) );
 			} else {
 				factory.emit(
 						this,
 						index,
-						target.x + x + Random.Float( width ),
-						target.y + y + Random.Float( height ) );
+						target.x + x + Random.Visual.Float( width ),
+						target.y + y + Random.Visual.Float( height ) );
 			}
 		}
 	}

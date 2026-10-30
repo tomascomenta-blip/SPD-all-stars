@@ -22,6 +22,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopRewards;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.GolemQuest;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
@@ -76,6 +78,8 @@ import com.watabou.utils.Reflection;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+
+import java.util.LinkedHashSet;
 
 public class DwarfKing extends Mob {
 
@@ -335,7 +339,7 @@ public class DwarfKing extends Mob {
 	}
 
 	private HashSet<Mob> getSubjects(){
-		HashSet<Mob> subjects = new HashSet<>();
+		HashSet<Mob> subjects = new LinkedHashSet<>();
 		for (Mob m : Dungeon.level.mobs){
 			if (m.alignment == alignment && (m instanceof Ghoul || m instanceof Monk || m instanceof Warlock || m instanceof Golem)){
 				subjects.add(m);
@@ -435,6 +439,7 @@ public class DwarfKing extends Mob {
 		if (!BossHealthBar.isAssigned()) {
 			BossHealthBar.assignBoss(this);
 			yell(Messages.get(this, "notice"));
+			GolemQuest.kingFight(this);
 			for (Char ch : Actor.chars()){
 				if (ch instanceof DriedRose.GhostHero){
 					((DriedRose.GhostHero) ch).sayBoss();
@@ -519,6 +524,7 @@ public class DwarfKing extends Mob {
 			properties.remove(Property.IMMOVABLE);
 			phase = 3;
 			summonsMade = 1; //monk/warlock on 3rd summon
+			GolemQuest.kingPhase3(this);
 			sprite.centerEmitter().start( Speck.factory( Speck.SCREAM ), 0.4f, 2 );
 			Sample.INSTANCE.play( Assets.Sounds.CHALLENGE );
 			yell(  Messages.get(this, "enraged", Dungeon.hero.name()) );
@@ -559,11 +565,10 @@ public class DwarfKing extends Mob {
 			h.destroy();
 		}
 
-		if (pos == CityBossLevel.throne){
-			Dungeon.level.drop(new KingsCrown(), pos + Dungeon.level.width()).sprite.drop(pos);
-		} else {
-			Dungeon.level.drop(new KingsCrown(), pos).sprite.drop();
-		}
+		//cooperative runs: one crown for each hero that still has no armor ability
+		CoopRewards.dropAround(
+				CoopRewards.crowns(),
+				pos == CityBossLevel.throne ? pos + Dungeon.level.width() : pos);
 
 		Badges.validateBossSlain();
 		if (Statistics.qualifiedForBossChallengeBadge){

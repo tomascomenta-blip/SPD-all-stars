@@ -67,7 +67,13 @@ public class TengusMask extends Item {
 		super.execute( hero, action );
 
 		if (action.equals( AC_WEAR )) {
-			
+
+			//cooperative runs bring one mask per hero: a hero who already chose keeps it for the others
+			if (hero.subClass != HeroSubClass.NONE){
+				GLog.w(Messages.get(this, "already"));
+				return;
+			}
+
 			curUser = hero;
 
 			GameScene.show( new WndChooseSubclass( this, hero ) );
@@ -92,6 +98,12 @@ public class TengusMask extends Item {
 	}
 	
 	public void choose( HeroSubClass way ) {
+		choose( way, curUser );
+	}
+
+	//cooperative runs: the hero who opened the window, not curUser (another hero may have used an
+	//item while this player was choosing)
+	public void choose( HeroSubClass way, Hero curUser ) {
 		
 		detach( curUser.belongings.backpack );
 		Catalog.countUse( getClass() );

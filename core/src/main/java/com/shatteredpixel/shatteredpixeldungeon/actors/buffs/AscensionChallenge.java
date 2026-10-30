@@ -60,16 +60,29 @@ import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.Boar;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.GoblinElite;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.GoblinGiant;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.GoblinGunner;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.GoblinShaman;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.GoblinSpearman;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forest.TrumpetFlower;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.forgotten.ForgottenMobs;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.kingdom.KingdomFeatures;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.kingdom.KingdomMobs;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.starship.StarshipMobs;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.undersea.UnderseaMobs;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.Image;
 import com.watabou.utils.Bundle;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class AscensionChallenge extends Buff {
 
-	private static HashMap<Class<?extends Mob>, Float> modifiers = new HashMap<>();
+	private static HashMap<Class<?extends Mob>, Float> modifiers = new LinkedHashMap<>();
 	static {
 		modifiers.put(Rat.class,            10f);
 		modifiers.put(Snake.class,          9f);
@@ -100,6 +113,50 @@ public class AscensionChallenge extends Buff {
 		modifiers.put(Succubus.class,       1.2f);
 		modifiers.put(Eye.class,            1.1f);
 		modifiers.put(Scorpio.class,        1.1f);
+
+		//the new worlds, same tiers as the regions they replace
+		//subclasses go before their parent, first match wins
+		modifiers.put(Boar.class,                         10f);
+		modifiers.put(GoblinSpearman.class,               9f);
+		modifiers.put(GoblinElite.class,                  8f);
+		modifiers.put(GoblinShaman.class,                 8f);
+		modifiers.put(GoblinGunner.class,                 9f);
+		modifiers.put(TrumpetFlower.class,                8.5f);
+		modifiers.put(GoblinGiant.class,                  4f);
+
+		modifiers.put(KingdomMobs.Soldier.class,          5f);
+		modifiers.put(KingdomFeatures.BannerBearer.class, 5f);
+		modifiers.put(KingdomMobs.Swordsman.class,        4.5f);
+		modifiers.put(KingdomMobs.Gunner.class,           4.5f);
+		modifiers.put(KingdomMobs.Rifleman.class,         4f);
+		modifiers.put(KingdomMobs.RoyalSlime.class,       4f);
+		modifiers.put(KingdomMobs.SmallSlime.class,       4f);
+		modifiers.put(KingdomMobs.Wizard.class,           4f);
+		modifiers.put(KingdomMobs.DarkKnight.class,       2f);
+		modifiers.put(KingdomMobs.DarkHorse.class,        2f);
+		modifiers.put(KingdomMobs.DarkKnightFoot.class,   2f);
+
+		modifiers.put(StarshipMobs.Varkolyn.class,        2.5f);
+		modifiers.put(StarshipMobs.Ufo.class,             2.5f);
+		modifiers.put(StarshipMobs.AlienLaser.class,      2.25f);
+		modifiers.put(StarshipMobs.AlienSword.class,      2f);
+		modifiers.put(StarshipMobs.Tentacle.class,        2f);
+		modifiers.put(StarshipMobs.Battery.class,         2f);
+
+		modifiers.put(UnderseaMobs.InfectedCrew.class,    1.67f);
+		modifiers.put(UnderseaMobs.KrakenMinion.class,    1.5f);
+		modifiers.put(UnderseaMobs.Subject001.class,      1.5f);
+		modifiers.put(UnderseaMobs.Subject002.class,      1.33f);
+		modifiers.put(UnderseaMobs.Subject004.class,      1.2f);
+
+		modifiers.put(ForgottenMobs.Compy.class,          1.2f);
+		modifiers.put(ForgottenMobs.Beast.class,          1.1f);
+	}
+
+	//come in packs or out of another mob, so they only lift half a stack
+	private static boolean halfStack( Char ch ){
+		return ch instanceof Ghoul || ch instanceof RipperDemon
+				|| ch instanceof KingdomMobs.SmallSlime || ch instanceof ForgottenMobs.Compy;
 	}
 
 	public static float statModifier(Char ch){
@@ -189,7 +246,7 @@ public class AscensionChallenge extends Buff {
 		if (!found) return;
 
 		float oldStacks = chal.stacks;
-		if (enemy instanceof Ghoul || enemy instanceof RipperDemon){
+		if (halfStack(enemy)){
 			chal.stacks -= 0.5f;
 		} else {
 			chal.stacks -= 1;
@@ -204,7 +261,7 @@ public class AscensionChallenge extends Buff {
 
 		//if the hero is at the max level, grant them 10 effective xp per stack cleared
 		// for the purposes of on-xp gain effects
-		if (oldStacks > chal.stacks && Dungeon.hero.lvl == Hero.MAX_LEVEL){
+		if (oldStacks > chal.stacks && Dungeon.hero.lvl >= Dungeon.hero.maxLevel()){
 			Dungeon.hero.earnExp(Math.round(10*(oldStacks - chal.stacks)), chal.getClass());
 		}
 
@@ -225,9 +282,9 @@ public class AscensionChallenge extends Buff {
 			return m.EXP;
 		}
 
-		if (m instanceof RipperDemon){
+		if (m instanceof RipperDemon || m instanceof ForgottenMobs.Compy){
 			return 10; //reduced due to their numbers
-		} else if (m instanceof Ghoul){
+		} else if (m instanceof Ghoul || m instanceof KingdomMobs.SmallSlime){
 			return 7; //half of 13, rounded up
 		} else {
 			for (Class<?extends Mob> cls : modifiers.keySet()){

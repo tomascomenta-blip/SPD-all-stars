@@ -24,6 +24,8 @@ package com.shatteredpixel.shatteredpixeldungeon.ui;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopOrders;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
@@ -51,15 +53,17 @@ public class TalentsPane extends ScrollPane {
 	RenderedTextBlock blockText;
 
 	public TalentsPane( TalentButton.Mode mode ) {
-		this( mode, Dungeon.hero.talents );
+		this( mode, Dungeon.local().talents );
 	}
 
 	public TalentsPane( TalentButton.Mode mode, ArrayList<LinkedHashMap<Talent, Integer>> talents ) {
 		super(new Component());
 
-		Ratmogrify.useRatroicEnergy = Dungeon.hero != null && Dungeon.hero.armorAbility instanceof Ratmogrify;
+		Ratmogrify.useRatroicEnergy = Dungeon.local() != null && Dungeon.local().armorAbility instanceof Ratmogrify;
 
 		int tiersAvailable = 1;
+		//a hero who can go past level 30 but hasn't picked a path yet
+		boolean needsPath = false;
 
 		if (mode == TalentButton.Mode.INFO){
 			if (!Badges.isUnlocked(Badges.Badge.LEVEL_REACHED_1)){
@@ -72,15 +76,21 @@ public class TalentsPane extends ScrollPane {
 				tiersAvailable = Talent.MAX_TALENT_TIERS;
 			}
 		} else {
+			//metamorphosis windows come from game logic (shared in cooperative runs): the hero in context
+			Hero who = mode == TalentButton.Mode.UPGRADE ? Dungeon.local() : Dungeon.hero;
 			while (tiersAvailable < Talent.MAX_TALENT_TIERS
-					&& Dungeon.hero.lvl+1 >= Talent.tierLevelThresholds[tiersAvailable+1]){
+					&& who.lvl+1 >= Talent.tierLevelThresholds[tiersAvailable+1]){
 				tiersAvailable++;
 			}
-			if (tiersAvailable > 2 && Dungeon.hero.subClass == HeroSubClass.NONE){
+			if (tiersAvailable > 2 && who.subClass == HeroSubClass.NONE){
 				tiersAvailable = 2;
-			} else if (tiersAvailable > 3 && Dungeon.hero.armorAbility == null){
+			} else if (tiersAvailable > 3 && who.armorAbility == null && who.specialization == null){
+				//(with a path but no armor ability, the 4th row is just empty)
 				tiersAvailable = 3;
+			} else if (tiersAvailable > 4 && who.specialization == null){
+				tiersAvailable = 4;
 			}
+			needsPath = tiersAvailable == 4 && who.specialization == null && who.lvlCap > Hero.MAX_LEVEL;
 		}
 
 		tiersAvailable = Math.min(tiersAvailable, talents.size());
@@ -111,6 +121,9 @@ public class TalentsPane extends ScrollPane {
 			content.add(blockText);
 		} else if (tiersAvailable == 3) {
 			blockText = PixelScene.renderTextBlock(Messages.get(this, "unlock_tier4"), 6);
+			content.add(blockText);
+		} else if (needsPath) {
+			blockText = PixelScene.renderTextBlock(Messages.get(this, "unlock_tier5"), 6);
 			content.add(blockText);
 		} else {
 			blockText = null;
@@ -180,7 +193,7 @@ public class TalentsPane extends ScrollPane {
 
 			if (mode == TalentButton.Mode.UPGRADE) {
 				setupStars();
-				if (Dungeon.hero.talentPointsAvailable(tier) > 0){
+				if (CoopOrders.talentPointsAvailable(Dungeon.local(), tier) > 0){
 
 					random = new IconButton(Icons.SHUFFLE.get()){
 						@Override
@@ -201,9 +214,11 @@ public class TalentsPane extends ScrollPane {
 										return;
 									}
 									if (index == 0 || index == 1){
-										while (Dungeon.hero.talentPointsAvailable(tier) > 0){
+										//cooperative runs: an upgrade can't be refused here, but stop anyway if none goes through
+										int tries = 0;
+										while (CoopOrders.talentPointsAvailable(Dungeon.local(), tier) > 0 && tries++ < 200){
 											TalentButton button = Random.element(buttons);
-											if (Dungeon.hero.pointsInTalent(button.talent) < button.talent.maxPoints()){
+											if (CoopOrders.pointsInTalent(Dungeon.local(), button.talent) < button.talent.maxPoints()){
 												button.upgradeTalent();
 												if (index == 1){
 													break;
@@ -219,7 +234,7 @@ public class TalentsPane extends ScrollPane {
 
 						@Override
 						public void update() {
-							if (Dungeon.hero.lvl >= 3 && Statistics.qualifiedForRandomVictoryBadge){
+							if (Dungeon.local().lvl >= 3 && Statistics.qualifiedForRandomVictoryBadge){
 								icon.tint(1, 1, 1, (float)Math.abs(Math.cos(1.5f*Math.PI*Game.timeTotal)/2f));
 							}
 							super.update();
@@ -255,9 +270,9 @@ public class TalentsPane extends ScrollPane {
 				stars.clear();
 			}
 
-			int totStars = Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier] + Dungeon.hero.bonusTalentPoints(tier);
-			int openStars = Dungeon.hero.talentPointsAvailable(tier);
-			int usedStars = Dungeon.hero.talentPointsSpent(tier);
+			int totStars = Talent.tierLevelThresholds[tier+1] - Talent.tierLevelThresholds[tier] + Dungeon.local().bonusTalentPoints(tier);
+			int openStars = CoopOrders.talentPointsAvailable(Dungeon.local(), tier);
+			int usedStars = CoopOrders.talentPointsSpent(Dungeon.local(), tier);
 			for (int i = 0; i < totStars; i++){
 				Image im = new Speck().image(Speck.STAR);
 				stars.add(im);

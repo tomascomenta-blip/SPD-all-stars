@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Cripple;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfFeatherFall;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
@@ -56,6 +57,8 @@ public class Chasm implements Hero.Doom {
 	
 	public static void heroJump( final Hero hero ) {
 		heroPos = hero.pos;
+		//cooperative runs: each hero's window remembers its own position
+		final int jumpPos = hero.pos;
 		Game.runOnRenderThread(new Callback() {
 			@Override
 			public void call() {
@@ -74,17 +77,29 @@ public class Chasm implements Hero.Doom {
 								elapsed += Game.elapsed;
 							}
 
+							//the short delay against accidental taps only exists on the screen showing the window.
+							//In cooperative runs the other device replays the answer on a window it never shows,
+							//so the answer must not depend on it there (the tap is held back in clickAllowed instead)
+							private boolean answerReady(){
+								return elapsed > 0.2f || CoopSession.active();
+							}
+
+							@Override
+							public boolean clickAllowed() {
+								return elapsed > 0.2f;
+							}
+
 							@Override
 							public void hide() {
-								if (elapsed > 0.2f){
+								if (answerReady()){
 									super.hide();
 								}
 							}
 
 							@Override
 							protected void onSelect( int index ) {
-								if (index == 0 && elapsed > 0.2f) {
-									if (Dungeon.hero.pos == heroPos) {
+								if (index == 0 && answerReady()) {
+									if (Dungeon.hero.pos == (CoopSession.active() ? jumpPos : heroPos)) {
 										jumpConfirmed = true;
 										hero.resume();
 									}

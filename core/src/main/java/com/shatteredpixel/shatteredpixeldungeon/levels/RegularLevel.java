@@ -91,6 +91,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 
 public abstract class RegularLevel extends Level {
 	
@@ -691,7 +693,7 @@ public abstract class RegularLevel extends Level {
 
 	}
 
-	private static HashMap<Document, Dungeon.LimitedDrops> limitedDocs = new HashMap<>();
+	private static HashMap<Document, Dungeon.LimitedDrops> limitedDocs = new LinkedHashMap<>();
 	static {
 		limitedDocs.put(Document.SEWERS_GUARD, Dungeon.LimitedDrops.LORE_SEWERS);
 		limitedDocs.put(Document.PRISON_WARDEN, Dungeon.LimitedDrops.LORE_PRISON);
@@ -792,7 +794,7 @@ public abstract class RegularLevel extends Level {
 	@Override
 	public float levelExplorePercent( int depth ) {
 		//A room is considered not explored if:
-		HashSet<Room> missedRooms = new HashSet<>();
+		HashSet<Room> missedRooms = new LinkedHashSet<>();
 
 		//There are levelgen heaps which are undiscovered, in an openable container, or which contain keys
 		for (Heap h : heaps.valueList()){

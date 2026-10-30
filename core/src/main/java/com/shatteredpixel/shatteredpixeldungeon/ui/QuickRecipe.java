@@ -117,8 +117,8 @@ public class QuickRecipe extends Component {
 			};
 
 			int quantity = 0;
-			if (Dungeon.hero != null) {
-				ArrayList<Item> similar = Dungeon.hero.belongings.getAllSimilar(in);
+			if (Dungeon.local() != null) {
+				ArrayList<Item> similar = Dungeon.local().belongings.getAllSimilar(in);
 				for (Item sim : similar) {
 					//if we are looking for a specific item, it must be IDed
 					if (sim.getClass() != in.getClass() || sim.isIdentified())
@@ -161,7 +161,7 @@ public class QuickRecipe extends Component {
 				ShatteredPixelDungeon.scene().addToFront(new WndInfoItem(output));
 			}
 		};
-		if (Dungeon.hero != null && !hasInputs){
+		if (Dungeon.local() != null && !hasInputs){
 			this.output.sprite.alpha(0.3f);
 		}
 		this.output.showExtraInfo(false);
@@ -253,7 +253,7 @@ public class QuickRecipe extends Component {
 				}
 			}
 			
-			((AlchemyScene)ShatteredPixelDungeon.scene()).populate(ingredients, Dungeon.hero.belongings);
+			((AlchemyScene)ShatteredPixelDungeon.scene()).populate(ingredients, Dungeon.local().belongings);
 		}
 		
 		public void hardlightText(int color ){

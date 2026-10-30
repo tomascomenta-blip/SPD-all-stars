@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
 import com.shatteredpixel.shatteredpixeldungeon.SPDAction;
 import com.shatteredpixel.shatteredpixeldungeon.effects.ShadowBox;
@@ -30,6 +31,7 @@ import com.watabou.input.KeyEvent;
 import com.watabou.input.PointerEvent;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
+import com.watabou.noosa.Gizmo;
 import com.watabou.noosa.Group;
 import com.watabou.noosa.NinePatch;
 import com.watabou.noosa.PointerArea;
@@ -72,7 +74,7 @@ public class Window extends Group implements Signal.Listener<KeyEvent> {
 					(int) event.current.x,
 					(int) event.current.y )) {
 					
-					onBackPressed();
+					if (!CoopSession.windowBack(Window.this)) onBackPressed();
 				}
 			}
 		};
@@ -193,6 +195,33 @@ public class Window extends Group implements Signal.Listener<KeyEvent> {
 		offset(newXOfs, newYOfs);
 	}
 	
+	//cooperative runs: false holds back a tap of this device's player before it is shared
+	//(e.g. a window that ignores taps right after it opens)
+	public boolean clickAllowed() {
+		return true;
+	}
+
+	//cooperative runs: this window belongs to the other player's hero and is never shown here.
+	//It only exists so their choices can be replayed, so it must not react to this device's input.
+	public void coopDetach() {
+		coopKept = true;
+		KeyEvent.removeKeyListener( this );
+		Camera.remove( camera );
+		active = false;
+		for (Gizmo g : CoopSession.buttonsOfWindow(this)){
+			g.active = false;
+		}
+	}
+
+	//cooperative runs: a window kept aside by coopDetach is still open (waiting for its owner's
+	//choices) even though it has no parent on this device
+	private boolean coopKept = false;
+
+	//true while the window is shown here, or kept aside for the other player's choices
+	public boolean isOpen() {
+		return parent != null || coopKept;
+	}
+
 	public void hide() {
 		if (parent != null) {
 			parent.erase(this);
@@ -203,6 +232,7 @@ public class Window extends Group implements Signal.Listener<KeyEvent> {
 	@Override
 	public void destroy() {
 		super.destroy();
+		coopKept = false;
 		
 		Camera.remove( camera );
 		KeyEvent.removeKeyListener( this );
@@ -213,7 +243,7 @@ public class Window extends Group implements Signal.Listener<KeyEvent> {
 		if (event.pressed) {
 			if (KeyBindings.getActionForKey( event ) == SPDAction.BACK
 				|| KeyBindings.getActionForKey( event ) == SPDAction.WAIT){
-				onBackPressed();
+				if (!CoopSession.windowBack(this)) onBackPressed();
 			}
 		}
 		

@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
@@ -82,6 +83,7 @@ public class AlchemistsToolkit extends Artifact {
 			if (!isEquipped(hero))              GLog.i( Messages.get(this, "need_to_equip") );
 			else if (cursed)                    GLog.w( Messages.get(this, "cursed") );
 			else if (warmUpDelay > 0)           GLog.w( Messages.get(this, "not_ready") );
+			else if (Party.active())            GLog.w( Messages.get(Party.class, "no_toolkit") );
 			else {
 				AlchemyScene.assignToolkit(this);
 				Game.switchScene(AlchemyScene.class);
@@ -228,7 +230,7 @@ public class AlchemistsToolkit extends Artifact {
 				} else if (warmUpDelay == 101){
 					warmUpDelay = 100f;
 				} else if (!cursed && target.buff(MagicImmune.class) == null) {
-					float turnsToWarmUp = (int) Math.pow(10 - level(), 2);
+					float turnsToWarmUp = (int) StrictMath.pow(10 - level(), 2);
 					warmUpDelay -= 100 / turnsToWarmUp;
 				}
 				updateQuickslot();

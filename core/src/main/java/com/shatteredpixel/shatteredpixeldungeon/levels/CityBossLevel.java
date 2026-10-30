@@ -37,6 +37,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.painters.CityPainter;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.ImpShopRoom;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.rift.RiftBosses;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.ui.BossHealthBar;
@@ -362,10 +363,14 @@ public class CityBossLevel extends Level {
 				Music.INSTANCE.play(Assets.Music.CITY_BOSS, true);
 			}
 		});
+		//cooperative runs: the arena is closed now, the whole party comes in
+		gatherParty();
 	}
 
 	@Override
 	public void unseal() {
+		//cooperative runs: not while the boss of the Summoner's Rift still fights (it unseals when it dies)
+		if (RiftBosses.keepSealed(this)) return;
 		super.unseal();
 
 		set( bottomDoor, Terrain.DOOR );

@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopRules;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -57,7 +58,7 @@ public class Shocking extends Weapon.Enchantment {
 			
 			affected.remove(defender); //defender isn't hurt by lightning
 			for (Char ch : affected) {
-				if (ch.alignment != attacker.alignment) {
+				if (ch.alignment != attacker.alignment || CoopRules.friendlyTarget(attacker, ch)) {
 					ch.damage(Math.round(damage * 0.5f * powerMulti), this);
 				}
 			}

@@ -21,6 +21,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.levels;
 
+import com.shatteredpixel.shatteredpixeldungeon.rift.RiftBosses;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.WormQuest;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
@@ -211,6 +213,8 @@ public class CavesBossLevel extends Level {
 			pylon.pos = i;
 			mobs.add(pylon);
 		}
+		//the old tunnels of the rock worm, if the dwarf miner got its tooth
+		WormQuest.tunnels(this);
 	}
 
 	@Override
@@ -343,10 +347,14 @@ public class CavesBossLevel extends Level {
 			}
 		});
 
+		//cooperative runs: the arena is closed now, the whole party comes in
+		gatherParty();
 	}
 
 	@Override
 	public void unseal() {
+		//cooperative runs: not while the boss of the Summoner's Rift still fights (it unseals when it dies)
+		if (RiftBosses.keepSealed(this)) return;
 		super.unseal();
 
 		blobs.get(PylonEnergy.class).fullyClear();
@@ -477,6 +485,7 @@ public class CavesBossLevel extends Level {
 	public Group addVisuals() {
 		super.addVisuals();
 		CavesLevel.addCavesVisuals(this, visuals);
+		visuals.add(new WormQuest.TunnelVisuals());
 		return visuals;
 	}
 

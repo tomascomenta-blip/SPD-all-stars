@@ -49,18 +49,31 @@ public class HeroSprite extends CharSprite {
 	private Animation fly;
 	private Animation read;
 
+	//the hero this sprite draws (cooperative runs have more than one)
+	private Hero owner;
+
 	public HeroSprite() {
+		this( Dungeon.local() );
+	}
+
+	public HeroSprite( Hero hero ) {
 		super();
-		
-		texture( Dungeon.hero.heroClass.spritesheet() );
+
+		owner = hero;
+		texture( hero.heroClass.spritesheet() );
 		updateArmor();
 		
-		link( Dungeon.hero );
+		link( hero );
 
 		if (ch.isAlive())
 			idle();
 		else
 			die();
+	}
+
+	//only the sprite of the hero controlled on this device moves the camera
+	private boolean isLocal(){
+		return owner == null || owner == Dungeon.local();
 	}
 
 	public void disguise(HeroClass cls){
@@ -70,7 +83,8 @@ public class HeroSprite extends CharSprite {
 	
 	public void updateArmor() {
 
-		TextureFilm film = new TextureFilm( tiers(), Dungeon.hero.tier(), FRAME_WIDTH, FRAME_HEIGHT );
+		Hero hero = owner != null ? owner : Dungeon.local();
+		TextureFilm film = new TextureFilm( tiers(), hero.tier(), FRAME_WIDTH, FRAME_HEIGHT );
 		
 		idle = new Animation( 1, true );
 		idle.frames( film, 0, 0, 0, 1, 0, 0, 1, 1 );
@@ -95,7 +109,7 @@ public class HeroSprite extends CharSprite {
 		read = new Animation( 20, false );
 		read.frames( film, 19, 20, 20, 20, 20, 20, 20, 20, 20, 19 );
 		
-		if (Dungeon.hero.isAlive())
+		if (hero.isAlive())
 			idle();
 		else
 			die();
@@ -104,7 +118,7 @@ public class HeroSprite extends CharSprite {
 	@Override
 	public void place( int p ) {
 		super.place( p );
-		if (Game.scene() instanceof GameScene) Camera.main.panFollow(this, 5f);
+		if (Game.scene() instanceof GameScene && isLocal()) Camera.main.panFollow(this, 5f);
 	}
 
 	@Override
@@ -113,7 +127,7 @@ public class HeroSprite extends CharSprite {
 		if (ch != null && ch.flying) {
 			play( fly );
 		}
-		Camera.main.panFollow(this, 20f);
+		if (isLocal()) Camera.main.panFollow(this, 20f);
 	}
 
 	@Override
@@ -128,7 +142,7 @@ public class HeroSprite extends CharSprite {
 	public void jump( int from, int to, float height, float duration,  Callback callback ) {
 		super.jump( from, to, height, duration, callback );
 		play( fly );
-		Camera.main.panFollow(this, 20f);
+		if (isLocal()) Camera.main.panFollow(this, 20f);
 	}
 
 	public synchronized void read() {

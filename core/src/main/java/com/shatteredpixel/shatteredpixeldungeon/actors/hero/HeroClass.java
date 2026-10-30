@@ -46,6 +46,46 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.rogue.Smok
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Endure;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.HeroicLeap;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.warrior.Shockwave;
+import com.shatteredpixel.shatteredpixeldungeon.champions.ChampionHooks;
+import com.shatteredpixel.shatteredpixeldungeon.champions.bard.BardKit;
+import com.shatteredpixel.shatteredpixeldungeon.champions.bard.GrandOverture;
+import com.shatteredpixel.shatteredpixeldungeon.champions.botanist.Bloom;
+import com.shatteredpixel.shatteredpixeldungeon.champions.botanist.BotanistKit;
+import com.shatteredpixel.shatteredpixeldungeon.champions.botanist.WoodenStaff;
+import com.shatteredpixel.shatteredpixeldungeon.champions.brawler.BrassKnuckles;
+import com.shatteredpixel.shatteredpixeldungeon.champions.brawler.BrawlerKit;
+import com.shatteredpixel.shatteredpixeldungeon.champions.brawler.Ovation;
+import com.shatteredpixel.shatteredpixeldungeon.champions.executioner.BloodHarvest;
+import com.shatteredpixel.shatteredpixeldungeon.champions.executioner.ExecutionerAxe;
+import com.shatteredpixel.shatteredpixeldungeon.champions.executioner.ExecutionerKit;
+import com.shatteredpixel.shatteredpixeldungeon.champions.forger.ForgeEruption;
+import com.shatteredpixel.shatteredpixeldungeon.champions.forger.ForgeHammer;
+import com.shatteredpixel.shatteredpixeldungeon.champions.forger.ForgerKit;
+import com.shatteredpixel.shatteredpixeldungeon.champions.gravedigger.GravediggerKit;
+import com.shatteredpixel.shatteredpixeldungeon.champions.gravedigger.Headstone;
+import com.shatteredpixel.shatteredpixeldungeon.champions.gravedigger.Shovel;
+import com.shatteredpixel.shatteredpixeldungeon.champions.guardian.GuardianKit;
+import com.shatteredpixel.shatteredpixeldungeon.champions.guardian.SandStaff;
+import com.shatteredpixel.shatteredpixeldungeon.champions.guardian.SandTomb;
+import com.shatteredpixel.shatteredpixeldungeon.champions.ironlord.IronEclipse;
+import com.shatteredpixel.shatteredpixeldungeon.champions.ironlord.IronlordKit;
+import com.shatteredpixel.shatteredpixeldungeon.champions.ironlord.IronlordMace;
+import com.shatteredpixel.shatteredpixeldungeon.champions.jailer.ChainSickle;
+import com.shatteredpixel.shatteredpixeldungeon.champions.jailer.JailerKit;
+import com.shatteredpixel.shatteredpixeldungeon.champions.jailer.SpectralShackles;
+import com.shatteredpixel.shatteredpixeldungeon.champions.pyromancer.PyromancerKit;
+import com.shatteredpixel.shatteredpixeldungeon.champions.pyromancer.Supernova;
+import com.shatteredpixel.shatteredpixeldungeon.champions.scout.Blowgun;
+import com.shatteredpixel.shatteredpixeldungeon.champions.scout.RainOfDarts;
+import com.shatteredpixel.shatteredpixeldungeon.champions.scout.ScoutKit;
+import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfParalyticGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfToxicGas;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRecharging;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRetribution;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTeleportation;
+import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTerror;
 import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.Waterskin;
@@ -80,6 +120,16 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingSp
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.SKAssets;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.automaton.AutomatonHooks;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.automaton.SentryTurret;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.beastmaster.BeastmasterHooks;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.beastmaster.PackRoar;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.gunslinger.GunslingerHooks;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.gunslinger.LeadRain;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.spiritist.SoulVeil;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.spiritist.SpiritistHooks;
 import com.watabou.utils.DeviceCompat;
 
 public enum HeroClass {
@@ -89,7 +139,31 @@ public enum HeroClass {
 	ROGUE( HeroSubClass.ASSASSIN, HeroSubClass.FREERUNNER ),
 	HUNTRESS( HeroSubClass.SNIPER, HeroSubClass.WARDEN ),
 	DUELIST( HeroSubClass.CHAMPION, HeroSubClass.MONK ),
-	CLERIC( HeroSubClass.PRIEST, HeroSubClass.PALADIN );
+	CLERIC( HeroSubClass.PRIEST, HeroSubClass.PALADIN ),
+
+	//the champion classes (ours)
+	EXECUTIONER( HeroSubClass.CONQUEROR, HeroSubClass.HEADSMAN ),
+	SCOUT( HeroSubClass.TRAPPER, HeroSubClass.SKIRMISHER ),
+	PYROMANCER( HeroSubClass.TAMER, HeroSubClass.INFERNALIST ),
+	JAILER( HeroSubClass.SOULREAPER, HeroSubClass.LANTERNKEEPER ),
+	BRAWLER( HeroSubClass.PITBOSS, HeroSubClass.SHOWMAN ),
+	GRAVEDIGGER( HeroSubClass.MISTLORD, HeroSubClass.EXHUMER ),
+	GUARDIAN( HeroSubClass.CURATOR, HeroSubClass.COLOSSUS ),
+	BARD( HeroSubClass.TROUBADOUR, HeroSubClass.MINSTREL ),
+	//botanico
+	BOTANIST( HeroSubClass.WARGARDENER, HeroSubClass.DRUID ),
+
+	//ornn
+	FORGER( HeroSubClass.MASTERSMITH, HeroSubClass.LIVINGMOUNTAIN ),
+
+	//mordekaiser
+	IRONLORD( HeroSubClass.TYRANT, HeroSubClass.REVENANT ),
+
+	//the alt world heroes
+	AUTOMATON( HeroSubClass.SWARM_ENGINEER, HeroSubClass.TESLA_COIL ),
+	BEASTMASTER( HeroSubClass.PACK_ALPHA, HeroSubClass.FOREST_WARDEN ),
+	SPIRITIST( HeroSubClass.SPECTRE_LORD, HeroSubClass.PLAGUE_HERALD ),
+	GUNSLINGER( HeroSubClass.QUICKDRAW, HeroSubClass.BOUNTY_HUNTER );
 
 	private HeroSubClass[] subClasses;
 
@@ -140,7 +214,67 @@ public enum HeroClass {
 			case CLERIC:
 				initCleric( hero );
 				break;
+
+			case EXECUTIONER:
+				initExecutioner( hero );
+				break;
+
+			case SCOUT:
+				initScout( hero );
+				break;
+
+			case PYROMANCER:
+				initPyromancer( hero );
+				break;
+
+			case JAILER:
+				initJailer( hero );
+				break;
+
+			case BRAWLER:
+				initBrawler( hero );
+				break;
+
+			case GRAVEDIGGER:
+				initGravedigger( hero );
+				break;
+
+			case GUARDIAN:
+				initGuardian( hero );
+				break;
+
+			case BARD:
+				initBard( hero );
+				break;
+
+			//botanico
+			case BOTANIST:
+				initBotanist( hero );
+				break;
+			//ornn
+			case FORGER:
+				initForger( hero );
+				break;
+			//mordekaiser
+			case IRONLORD:
+				initIronlord( hero );
+				break;
+			//alt worlds
+			case AUTOMATON:
+				AutomatonHooks.initHero( hero );
+				break;
+			case BEASTMASTER:
+				BeastmasterHooks.initHero( hero );
+				break;
+			case SPIRITIST:
+				SpiritistHooks.initHero( hero );
+				break;
+			case GUNSLINGER:
+				GunslingerHooks.initHero( hero );
+				break;
 		}
+
+		ChampionHooks.ensurePassives( hero );
 
 		if (SPDSettings.quickslotWaterskin()) {
 			for (int s = 0; s < QuickSlot.SIZE; s++) {
@@ -260,6 +394,166 @@ public enum HeroClass {
 		new ScrollOfRemoveCurse().identify();
 	}
 
+	public boolean isChampion(){
+		return ChampionHooks.isChampion(this);
+	}
+
+	private static void initExecutioner( Hero hero ) {
+		(hero.belongings.weapon = new ExecutionerAxe()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		ExecutionerKit kit = new ExecutionerKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+
+		new PotionOfHealing().identify();
+		new ScrollOfTerror().identify();
+	}
+
+	private static void initScout( Hero hero ) {
+		(hero.belongings.weapon = new Dagger()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		Blowgun blowgun = new Blowgun();
+		blowgun.identify().collect();
+		ScoutKit kit = new ScoutKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+		Dungeon.quickslot.setSlot(1, blowgun);
+
+		new PotionOfToxicGas().identify();
+		new ScrollOfTeleportation().identify();
+	}
+
+	private static void initPyromancer( Hero hero ) {
+		(hero.belongings.weapon = new Gloves()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		PyromancerKit kit = new PyromancerKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+
+		new PotionOfLiquidFlame().identify();
+		new ScrollOfRecharging().identify();
+	}
+
+	private static void initJailer( Hero hero ) {
+		(hero.belongings.weapon = new ChainSickle()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		JailerKit kit = new JailerKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+
+		new PotionOfParalyticGas().identify();
+		new ScrollOfRetribution().identify();
+	}
+
+	private static void initBrawler( Hero hero ) {
+		(hero.belongings.weapon = new BrassKnuckles()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		BrawlerKit kit = new BrawlerKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+
+		new PotionOfHealing().identify();
+		new ScrollOfRage().identify();
+	}
+
+	private static void initGravedigger( Hero hero ) {
+		(hero.belongings.weapon = new Shovel()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		GravediggerKit kit = new GravediggerKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+
+		new PotionOfMindVision().identify();
+		new ScrollOfTerror().identify();
+	}
+
+	private static void initGuardian( Hero hero ) {
+		(hero.belongings.weapon = new SandStaff()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		GuardianKit kit = new GuardianKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+
+		new PotionOfHaste().identify();
+		new ScrollOfRage().identify();
+	}
+
+	//mordekaiser
+	private static void initIronlord( Hero hero ) {
+		(hero.belongings.weapon = new IronlordMace()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		IronlordKit kit = new IronlordKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+
+		new PotionOfHealing().identify();
+		new ScrollOfTerror().identify();
+	}
+
+	private static void initBard( Hero hero ) {
+		(hero.belongings.weapon = new Dagger()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		BardKit kit = new BardKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+
+		new PotionOfHealing().identify();
+		new ScrollOfLullaby().identify();
+	}
+
+	//botanico
+	private static void initBotanist( Hero hero ) {
+		(hero.belongings.weapon = new WoodenStaff()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		BotanistKit kit = new BotanistKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+
+		for (int i = 0; i < 3; i++){
+			Plant.Seed seed = (Plant.Seed)
+					Generator.randomUsingDefaults(Generator.Category.SEED);
+			seed.identify().collect();
+			if (i == 0) Dungeon.quickslot.setSlot(1, seed);
+		}
+
+		new PotionOfHealing().identify();
+		new ScrollOfRemoveCurse().identify();
+	}
+
+	//ornn
+	private static void initForger( Hero hero ) {
+		(hero.belongings.weapon = new ForgeHammer()).identify();
+		hero.belongings.weapon.activate(hero);
+
+		ForgerKit kit = new ForgerKit();
+		kit.identify().collect();
+
+		Dungeon.quickslot.setSlot(0, kit);
+
+		new PotionOfHaste().identify();
+		new ScrollOfRage().identify();
+	}
+
 	public String title() {
 		return Messages.get(HeroClass.class, name());
 	}
@@ -290,6 +584,36 @@ public enum HeroClass {
 				return new ArmorAbility[]{new Challenge(), new ElementalStrike(), new Feint()};
 			case CLERIC:
 				return new ArmorAbility[]{new AscendedForm(), new Trinity(), new PowerOfMany()};
+			case EXECUTIONER:
+				return new ArmorAbility[]{new BloodHarvest()};
+			case SCOUT:
+				return new ArmorAbility[]{new RainOfDarts()};
+			case PYROMANCER:
+				return new ArmorAbility[]{new Supernova()};
+			case JAILER:
+				return new ArmorAbility[]{new SpectralShackles()};
+			case BRAWLER:
+				return new ArmorAbility[]{new Ovation()};
+			case GRAVEDIGGER:
+				return new ArmorAbility[]{new Headstone()};
+			case GUARDIAN:
+				return new ArmorAbility[]{new SandTomb()};
+			case BARD:
+				return new ArmorAbility[]{new GrandOverture()};
+			case BOTANIST:
+				return new ArmorAbility[]{new Bloom()};
+			case FORGER:
+				return new ArmorAbility[]{new ForgeEruption()};
+			case IRONLORD:
+				return new ArmorAbility[]{new IronEclipse()};
+			case AUTOMATON:
+				return new ArmorAbility[]{new SentryTurret()};
+			case BEASTMASTER:
+				return new ArmorAbility[]{new PackRoar()};
+			case SPIRITIST:
+				return new ArmorAbility[]{new SoulVeil()};
+			case GUNSLINGER:
+				return new ArmorAbility[]{new LeadRain()};
 		}
 	}
 
@@ -307,6 +631,37 @@ public enum HeroClass {
 				return Assets.Sprites.DUELIST;
 			case CLERIC:
 				return Assets.Sprites.CLERIC;
+			case EXECUTIONER:
+				return Assets.Sprites.EXECUTIONER;
+			case SCOUT:
+				return Assets.Sprites.SCOUT;
+			case PYROMANCER:
+				return Assets.Sprites.PYROMANCER;
+			case JAILER:
+				return Assets.Sprites.JAILER;
+			case BRAWLER:
+				return Assets.Sprites.BRAWLER;
+			case GRAVEDIGGER:
+				return Assets.Sprites.GRAVEDIGGER;
+			case GUARDIAN:
+				return Assets.Sprites.SAND_GUARDIAN;
+			case BARD:
+				return Assets.Sprites.BARD;
+			case BOTANIST:
+				return Assets.Sprites.BOTANIST;
+			case FORGER:
+				return Assets.Sprites.FORGER;
+			//mordekaiser
+			case IRONLORD:
+				return Assets.Sprites.IRONLORD;
+			case AUTOMATON:
+				return SKAssets.AUTOMATON;
+			case BEASTMASTER:
+				return SKAssets.BEASTMASTER;
+			case SPIRITIST:
+				return SKAssets.SPIRITIST;
+			case GUNSLINGER:
+				return SKAssets.GUNSLINGER;
 		}
 	}
 
@@ -324,6 +679,37 @@ public enum HeroClass {
 				return Assets.Splashes.DUELIST;
 			case CLERIC:
 				return Assets.Splashes.CLERIC;
+			case EXECUTIONER:
+				return Assets.Splashes.EXECUTIONER;
+			case SCOUT:
+				return Assets.Splashes.SCOUT;
+			case PYROMANCER:
+				return Assets.Splashes.PYROMANCER;
+			case JAILER:
+				return Assets.Splashes.JAILER;
+			case BRAWLER:
+				return Assets.Splashes.BRAWLER;
+			case GRAVEDIGGER:
+				return Assets.Splashes.GRAVEDIGGER;
+			case GUARDIAN:
+				return Assets.Splashes.GUARDIAN;
+			case BARD:
+				return Assets.Splashes.BARD;
+			case BOTANIST:
+				return Assets.Splashes.BOTANIST;
+			case FORGER:
+				return Assets.Splashes.FORGER;
+			//mordekaiser
+			case IRONLORD:
+				return Assets.Splashes.IRONLORD;
+			case AUTOMATON:
+				return SKAssets.SPLASH_AUTOMATON;
+			case BEASTMASTER:
+				return SKAssets.SPLASH_BEASTMASTER;
+			case SPIRITIST:
+				return SKAssets.SPLASH_SPIRITIST;
+			case GUNSLINGER:
+				return SKAssets.SPLASH_GUNSLINGER;
 		}
 	}
 	
@@ -344,6 +730,11 @@ public enum HeroClass {
 				return Badges.isUnlocked(Badges.Badge.UNLOCK_DUELIST);
 			case CLERIC:
 				return Badges.isUnlocked(Badges.Badge.UNLOCK_CLERIC);
+			case EXECUTIONER: case SCOUT: case PYROMANCER: case JAILER: case BRAWLER:
+			case GRAVEDIGGER: case GUARDIAN: case BARD: case BOTANIST: case FORGER: case IRONLORD:
+			case AUTOMATON: case BEASTMASTER: case SPIRITIST: case GUNSLINGER:
+				//the champions are always available
+				return true;
 		}
 	}
 	

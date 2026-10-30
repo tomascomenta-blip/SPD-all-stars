@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.mobs;
 
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.CaimanQuest;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
@@ -133,6 +134,7 @@ public class Goo extends Mob {
 		
 		if (state != SLEEPING){
 			Dungeon.level.seal();
+			Dungeon.level.gatherParty();
 		}
 
 		return super.act();
@@ -263,6 +265,7 @@ public class Goo extends Mob {
 		if (!BossHealthBar.isAssigned()){
 			BossHealthBar.assignBoss( this );
 			Dungeon.level.seal();
+			Dungeon.level.gatherParty();
 		}
 		boolean bleeding = (HP*2 <= HT);
 		super.damage(dmg, src);
@@ -314,7 +317,9 @@ public class Goo extends Mob {
 		if (!BossHealthBar.isAssigned()) {
 			BossHealthBar.assignBoss(this);
 			Dungeon.level.seal();
+			Dungeon.level.gatherParty();
 			yell(Messages.get(this, "notice"));
+			CaimanQuest.gooFight(this);
 			for (Char ch : Actor.chars()){
 				if (ch instanceof DriedRose.GhostHero){
 					((DriedRose.GhostHero) ch).sayBoss();

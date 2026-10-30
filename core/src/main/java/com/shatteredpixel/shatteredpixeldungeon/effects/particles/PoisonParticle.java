@@ -67,7 +67,7 @@ public class PoisonParticle extends PixelParticle {
 		
 		left = lifespan;
 		
-		speed.polar( -Random.Float( 3.1415926f ), Random.Float( 6 ) );
+		speed.polar( -Random.Visual.Float( 3.1415926f ), Random.Visual.Float( 6 ) );
 	}
 	
 	public void resetSplash( float x, float y ) {
@@ -78,7 +78,7 @@ public class PoisonParticle extends PixelParticle {
 		
 		left = lifespan;
 		
-		speed.polar( Random.Float( 3.1415926f ), Random.Float( 10, 20 ) );
+		speed.polar( Random.Visual.Float( 3.1415926f ), Random.Visual.Float( 10, 20 ) );
 	}
 	
 	@Override

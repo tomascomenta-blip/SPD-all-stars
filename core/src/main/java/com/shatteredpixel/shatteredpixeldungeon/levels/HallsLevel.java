@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.levels;
 
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.quests.SealsQuest;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
@@ -82,6 +83,13 @@ public class HallsLevel extends RegularLevel {
 		} else {
 			Music.INSTANCE.playTracks(HALLS_TRACK_LIST, HALLS_TRACK_CHANCES, false);
 		}
+	}
+
+	//the demonic seals (floors 21-23)
+	@Override
+	protected void createMobs() {
+		SealsQuest.place(this, rooms, roomEntrance);
+		super.createMobs();
 	}
 
 	@Override

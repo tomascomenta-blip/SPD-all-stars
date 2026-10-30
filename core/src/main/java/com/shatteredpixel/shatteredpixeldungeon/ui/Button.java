@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.watabou.input.ControllerHandler;
 import com.watabou.input.GameAction;
@@ -72,7 +73,7 @@ public class Button extends Component {
 					killTooltip();
 					switch (event.button){
 						case PointerEvent.LEFT: default:
-							Button.this.onClick();
+							if (!CoopSession.buttonClicked(Button.this)) Button.this.onClick();
 							break;
 						case PointerEvent.RIGHT:
 							Button.this.onRightClick();
@@ -132,7 +133,7 @@ public class Button extends Component {
 						Button.this.onPointerUp();
 						if (pressedButton == Button.this) {
 							pressedButton = null;
-							if (clickReady) onClick();
+							if (clickReady && !CoopSession.buttonClicked(Button.this)) onClick();
 						}
 					}
 					return true;
@@ -177,6 +178,11 @@ public class Button extends Component {
 	protected void onPointerDown() {}
 	protected void onPointerUp() {}
 	protected void onClick() {} //left click, default key type
+
+	//cooperative runs: replays a click of the other player on a shared window
+	public void coopClick() {
+		onClick();
+	}
 	protected void onRightClick() {}
 	protected void onMiddleClick() {}
 	protected boolean onLongClick() {

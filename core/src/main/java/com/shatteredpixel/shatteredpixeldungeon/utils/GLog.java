@@ -21,6 +21,10 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.utils;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopSession;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.Signal;
@@ -46,6 +50,21 @@ public class GLog {
 		
 		if (args.length > 0) {
 			text = Messages.format( text, args );
+		}
+
+		//cooperative runs: messages about the other player's hero carry their name
+		if (Party.active()){
+			Hero about = CoopSession.contextHero();
+			if (about != null && about != Dungeon.local()){
+				String name = Party.name(about);
+				if (!text.contains(name)){
+					String prefix = "";
+					for (String p : new String[]{POSITIVE, NEGATIVE, WARNING, HIGHLIGHT}){
+						if (text.startsWith(p)) prefix = p;
+					}
+					text = prefix + "[" + name + "] " + text.substring(prefix.length());
+				}
+			}
 		}
 		
 		DeviceCompat.log( TAG, text );

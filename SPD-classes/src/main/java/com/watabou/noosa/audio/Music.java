@@ -134,7 +134,7 @@ public enum Music {
 			for (int i = 0; i < trackList.length; i++) {
 				//create all the players we need pre-emptively, so they will be cached
 				createPlayer(trackList[i]);
-				if (Random.Float() < trackChances[i]) {
+				if (Random.Visual.Float() < trackChances[i]) {
 					trackQueue.add(trackList[i]);
 				}
 			}
@@ -202,7 +202,7 @@ public enum Music {
 
 		if (trackQueue.isEmpty()) {
 			for (int i = 0; i < trackList.length; i++) {
-				if (Random.Float() < trackChances[i]) {
+				if (Random.Visual.Float() < trackChances[i]) {
 					trackQueue.add(trackList[i]);
 				}
 			}

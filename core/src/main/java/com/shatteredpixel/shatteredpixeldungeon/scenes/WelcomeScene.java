@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.shatteredpixel.shatteredpixeldungeon.coop.CoopAuto;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Chrome;
@@ -78,6 +79,13 @@ public class WelcomeScene extends PixelScene {
 					ShatteredPixelDungeon.resetScene();
 				}
 			});
+			return;
+		}
+
+		//automated cooperative testing skips the welcome screen
+		if (CoopAuto.enabled()){
+			SPDSettings.intro(false);
+			ShatteredPixelDungeon.switchNoFade(TitleScene.class);
 			return;
 		}
 
@@ -156,12 +164,10 @@ public class WelcomeScene extends PixelScene {
 					SPDSettings.version(ShatteredPixelDungeon.versionCode);
 					GamesInProgress.selectedClass = null;
 					GamesInProgress.curSlot = GamesInProgress.firstEmpty();
-					if (GamesInProgress.curSlot == -1 || Rankings.INSTANCE.totalNumber > 0){
-						SPDSettings.intro(false);
-						ShatteredPixelDungeon.switchScene(TitleScene.class);
-					} else {
-						ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
-					}
+					//cooperative version: go straight to the menu so the co-op button is reachable,
+					//instead of forcing the tutorial run first
+					SPDSettings.intro(false);
+					ShatteredPixelDungeon.switchScene(TitleScene.class);
 				} else {
 					updateVersion(previousVersion);
 					ShatteredPixelDungeon.switchScene(TitleScene.class);

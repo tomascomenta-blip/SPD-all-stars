@@ -32,7 +32,12 @@ import com.watabou.utils.Bundlable;
 import com.watabou.utils.Bundle;
 import com.watabou.utils.SparseArray;
 
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.coop.Party;
+import com.shatteredpixel.shatteredpixeldungeon.soulknight.continent.big.Colossus;
+
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public abstract class Actor implements Bundlable {
 	
@@ -149,9 +154,20 @@ public abstract class Actor implements Bundlable {
 	// *** Static members ***
 	// **********************
 	
-	private static HashSet<Actor> all = new HashSet<>();
-	private static HashSet<Char> chars = new HashSet<>();
+	//linked sets so iteration order is the same on every machine (needed for cooperative runs)
+	private static LinkedHashSet<Actor> all = new LinkedHashSet<>();
+	private static LinkedHashSet<Char> chars = new LinkedHashSet<>();
 	private static volatile Actor current;
+	//true while the actor thread is waiting (for input, an animation, or another player)
+	private static volatile boolean idle = false;
+
+	public static Actor current(){
+		return current;
+	}
+
+	public static boolean idle(){
+		return idle;
+	}
 
 	private static SparseArray<Actor> ids = new SparseArray<>();
 	private static int nextID = 1;
@@ -168,6 +184,7 @@ public abstract class Actor implements Bundlable {
 
 		all.clear();
 		chars.clear();
+		Colossus.clearAll();
 
 		ids.clear();
 	}
@@ -191,7 +208,7 @@ public abstract class Actor implements Bundlable {
 		}
 		TargetedCell.fixTime(min);
 
-		if (Dungeon.hero != null && all.contains( Dungeon.hero )) {
+		if (Party.leader() != null && all.contains( Party.leader() )) {
 			Statistics.duration += min;
 		}
 		now -= min;
@@ -199,7 +216,13 @@ public abstract class Actor implements Bundlable {
 	
 	public static void init() {
 		
-		add( Dungeon.hero );
+		if (Party.active()){
+			for (Hero h : Party.living()){
+				add( h );
+			}
+		} else {
+			add( Dungeon.hero );
+		}
 		
 		for (Mob mob : Dungeon.level.mobs) {
 			add( mob );
@@ -247,7 +270,16 @@ public abstract class Actor implements Bundlable {
 	
 	public static boolean keepActorThreadAlive = true;
 	
+	private static volatile Thread processThread;
+
+	//true on the thread that runs the turns
+	public static boolean onProcessThread(){
+		return processThread != null && Thread.currentThread() == processThread;
+	}
+
 	public static void process() {
+
+		processThread = Thread.currentThread();
 		
 		boolean doNext;
 		boolean interrupted = false;
@@ -262,8 +294,10 @@ public abstract class Actor implements Bundlable {
 					for (Actor actor : all) {
 
 						//some actors will always go before others if time is equal.
+						//ties in time and priority go to the lowest id, so the order never depends on hashing
 						if (actor.time < earliest ||
-								actor.time == earliest && (current == null || actor.actPriority > current.actPriority)) {
+								actor.time == earliest && (current == null || actor.actPriority > current.actPriority
+										|| (actor.actPriority == current.actPriority && actor.id() < current.id()))) {
 							earliest = actor.time;
 							current = actor;
 						}
@@ -277,7 +311,15 @@ public abstract class Actor implements Bundlable {
 				now = current.time;
 				Actor acting = current;
 
-				if (acting instanceof Char && ((Char) acting).sprite != null) {
+				//cooperative runs: decide which hero is in context, and let the session sync if needed
+				Party.contextFor(acting);
+				if (coopHook != null && !coopHook.beforeAct(acting)){
+					//the session asked to pause here (e.g. while a resync is prepared)
+					current = null;
+					acting = null;
+				}
+
+				if (acting != null && acting instanceof Char && ((Char) acting).sprite != null) {
 					// If it's character's turn to act, but its sprite
 					// is moving, wait till the movement is over
 					try {
@@ -293,12 +335,12 @@ public abstract class Actor implements Bundlable {
 				
 				interrupted = interrupted || Thread.interrupted();
 				
-				if (interrupted){
+				if (interrupted || acting == null){
 					doNext = false;
 					current = null;
 				} else {
 					doNext = acting.act();
-					if (doNext && (Dungeon.hero == null || !Dungeon.hero.isAlive())) {
+					if (doNext && !Party.anyAlive()) {
 						doNext = false;
 						current = null;
 					}
@@ -320,11 +362,13 @@ public abstract class Actor implements Bundlable {
 					//signals to the gamescene that actor processing is finished for now
 					Thread.currentThread().notify();
 					
+					idle = true;
 					try {
 						Thread.currentThread().wait();
 					} catch (InterruptedException e) {
 						interrupted = true;
 					}
+					idle = false;
 				}
 			}
 
@@ -387,7 +431,8 @@ public abstract class Actor implements Bundlable {
 			if (ch.pos == pos)
 				return ch;
 		}
-		return null;
+		//the rest of a big one's body
+		return Colossus.at( pos );
 	}
 
 	public static synchronized Actor findById( int id ) {
@@ -395,8 +440,14 @@ public abstract class Actor implements Bundlable {
 	}
 
 	public static synchronized HashSet<Actor> all() {
-		return new HashSet<>(all);
+		return new LinkedHashSet<>(all);
 	}
 
-	public static synchronized HashSet<Char> chars() { return new HashSet<>(chars); }
+	//hook used by cooperative sessions, returns false to skip processing this actor for now
+	public interface CoopHook {
+		boolean beforeAct( Actor acting );
+	}
+	public static volatile CoopHook coopHook = null;
+
+	public static synchronized HashSet<Char> chars() { return new LinkedHashSet<>(chars); }
 }
